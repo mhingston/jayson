@@ -1,0 +1,44 @@
+{
+  "name": "jayson",
+  "version": "1.0.0",
+  "description": "JSON-RPC inspired server and client with HTTP and WebSocket transports and JSON Schema IDL",
+  "main": "src/index.js",
+  "browser": "dist/jayson.min.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "webpack": "webpack"
+  },
+  "keywords": [],
+  "author": "Mark Hingston <git@mail.bitshift.cc>",
+  "license": "MIT",
+  "dependencies": {
+    "ajv": "^6.1.1",
+    "bytes": "^3.0.0",
+    "date-fns": "^1.29.0",
+    "fetch-ponyfill": "^5.0.0",
+    "function-arguments": "^1.0.8",
+    "http-status-codes": "^1.3.0",
+    "jsonwebtoken": "^8.1.1",
+    "koa": "^2.4.1",
+    "koa-bodyparser": "^4.2.0",
+    "koa-compress": "^2.0.0",
+    "koa-helmet": "^3.3.0",
+    "koa-router": "^7.4.0",
+    "koa2-cors": "^2.0.5",
+    "lodash": "^4.17.5",
+    "ws": "^4.0.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.0.0-beta.39",
+    "@babel/preset-env": "^7.0.0-beta.39",
+    "@babel/preset-es2015": "^7.0.0-beta.39",
+    "babel-loader": "^8.0.0-beta.0",
+    "promise-polyfill": "^7.1.0",
+    "regenerator-runtime": "^0.11.1",
+    "webpack": "^3.10.0"
+  },
+  "optionalDependencies": {
+    "bufferutil": "^3.0.3",
+    "utf-8-validate": "^4.0.0"
+  }
+}
