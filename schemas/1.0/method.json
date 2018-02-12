@@ -1,0 +1,45 @@
+{
+    "id": "https://github.com/mhingston/jayson/blob/master/schemas/1.0/method.json#",
+    "$schema": "http://json-schema.org/schema#",
+    "title": "Jayson Method Schema",
+    "type": "object",
+    "definitions": {
+        "any": {
+            "anyOf": [{
+                    "type": "string"
+                },
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "object"
+                },
+                {
+                    "type": "array"
+                },
+                {
+                    "type": "boolean"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        }
+    },
+    "required": ["params", "output"],
+    "properties": {
+        "params": {
+            "$ref": "#/definitions/any"
+        },
+        "output": {
+            "$ref": "#/definitions/any"
+        },
+        "requires": {
+            "type": "object"
+        },
+        "timeout": {
+            "type": "number"
+        }
+    },
+    "additionalProperties": false
+}
