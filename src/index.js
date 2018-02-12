@@ -1,6 +1,6 @@
 if(process.env.NODE_ENV === 'browser')
 {
-    regeneratorRuntime = require("regenerator-runtime");
+    regeneratorRuntime = require('regenerator-runtime');
 }
 
 const Client = require('./Client');

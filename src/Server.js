@@ -1,7 +1,7 @@
 const Errors = require('./Errors');
 const _ = require('lodash');
 const {format} = require('date-fns');
-const functionArguments = require('function-arguments');
+const fnArgs = require('fn-args');
 const Ajv = require('ajv');
 const jwt = require('jsonwebtoken');
 const WebSocket = require('ws');
@@ -41,7 +41,6 @@ class Server
         this.VERSION = '1.0';
         this.methods = config.methods;
         config.title = config.title || 'Jayson Server API'
-        config.description = config.description || '';
         this.config = {};
         
         for(const key in config)
@@ -75,7 +74,7 @@ class Server
             this.http.use(compress(config.http.compress || {}));
             this.http.use(bodyParser(
             {
-                jsonLimit: config.jsonLimit || '50mb',
+                jsonLimit: config.jsonLimit || '1mb',
                 onerror: (error, ctx) =>
                 {
                     ctx.status = HttpStatus.UNPROCESSABLE_ENTITY;
@@ -135,12 +134,78 @@ class Server
     {
         const schema =
         {
-            '$schema': 'http://json-schema.org/draft-07/schema#',
-            title: this.title,
-            description: this.description,
+            'id': this.config.schemaURL,
+            '$schema': 'http://json-schema.org/schema#',
+            title: this.config.title,
+            description: this.config.description,
             type: 'object',
-            properties: {}
+            properties: {},
+            additionalProperties: false
         };
+
+        const traverse = (root, namespace) =>
+        {
+            const keys = Object.keys(namespace);
+            
+            for(const key of keys)
+            {
+                if(typeof namespace[key] === 'function')
+                {
+                    if(namespace[key].schema)
+                    {
+                        root.properties[key] = namespace[key].schema;
+                    }
+
+                    else
+                    {
+                        root.properties[key] =
+                        {
+                            type: 'object',
+                            properties:
+                            {
+                                params:
+                                {
+                                    anyOf:
+                                    [
+                                        {type: 'string'},
+                                        {type: 'number'},
+                                        {type: 'object'},
+                                        {type: 'array'},
+                                        {type: 'boolean'},
+                                        {type: 'null'}
+                                    ]
+                                }
+                            },
+                            additionalProperties: false
+                        };
+
+                        if(namespace[key].requires)
+                        {
+                            root.properties[key].properties.requires = namespace[key].requires;
+                        }
+
+                        if(namespace[key].timeout)
+                        {
+                            root.properties[key].properties.timeout = {type: 'number'}
+                        }
+                    }
+                }
+
+                else if(typeof namespace[key] === 'object')
+                {
+                    root.properties[key] =
+                    {
+                        type: 'object',
+                        properties: {},
+                        additionalProperties: false
+                    };
+
+                    traverse(root.properties[key], namespace[key]);
+                }
+            }
+        }
+
+        traverse(schema, this.methods);
         
         return {
             jayson: this.VERSION,
@@ -152,7 +217,7 @@ class Server
     async handleCall({json, headers})
     {
         let result;
-        const id = (typeof json.id === "string" || typeof json.id === "number" || json.id === null) ? json.id : undefined;
+        const id = (typeof json.id === 'string' || typeof json.id === 'number' || json.id === null) ? json.id : undefined;
         
         if(json.jayson !== this.VERSION)
         {
@@ -285,7 +350,7 @@ class Server
 
                     try
                     {
-                        result = method.call(null, context);
+                        result = method(context);
                         
                         if(result instanceof Promise)
                         {
@@ -341,7 +406,7 @@ class Server
             if(_.isPlainObject(method.schema))
             {
                 const ajv = new Ajv();
-                const isValid = ajv.validate(method.schema, Object.assign(json.params, context));
+                const isValid = ajv.validate(method.schema, Object.assign(json.params, {context: context}));
     
                 if(!isValid)
                 {
@@ -387,7 +452,7 @@ class Server
 
                 try
                 {
-                    result = method.call(null, Object.assign(json.params, context));
+                    result = method(Object.assign(json.params, {context: context}));
                     
                     if(result instanceof Promise)
                     {
@@ -439,10 +504,12 @@ class Server
 
         else
         {
-            const params = json.params.unshift(context);
-            const args = functionArguments(method);
+            const params = json.params.slice();
+            params.unshift(context);
+            const args = fnArgs(method);
+            const hasRestParams = !!args.filter((arg) => arg.startsWith('...')).length;
 
-            if(args.length !== params.length)
+            if(args.length !== params.length && !hasRestParams)
             {
                 this.logger.log('error', `${headers['x-forwarded-for']} - - [${format(new Date(), 'DD/MMM/YYYY HH:mm:ss ZZ')}] Invalid params`);
 
@@ -485,7 +552,7 @@ class Server
 
                 try
                 {
-                    result = method.call(null, ...params);
+                    result = method(...params);
                     
                     if(result instanceof Promise)
                     {

@@ -1,6 +1,5 @@
 # To Do
 
 - Readme
+- Tests
 - Examples
-- Documentation Generation
-- Code Generation

@@ -121,7 +121,6 @@ class Client
             else if(!this.ws || this.ws.readyState !== this.readyState.CONNECTING)
             {
                 this.reconnect = true;
-                
                 this.ws = new WebSocket(this.config.url);
 
                 if(!this.ws.on)
