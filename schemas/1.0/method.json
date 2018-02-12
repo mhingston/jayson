@@ -31,7 +31,7 @@
         "params": {
             "$ref": "#/definitions/any"
         },
-        "output": {
+        "returns": {
             "$ref": "#/definitions/any"
         },
         "requires": {

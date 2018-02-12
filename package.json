@@ -5,7 +5,8 @@
   "main": "src/index.js",
   "browser": "dist/jayson.min.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "tape ./test/*.js",
+    "coverage": "nyc tape test/index.js | tap-spec",
     "webpack": "webpack"
   },
   "keywords": [],
@@ -33,8 +34,11 @@
     "@babel/preset-env": "^7.0.0-beta.39",
     "@babel/preset-es2015": "^7.0.0-beta.39",
     "babel-loader": "^8.0.0-beta.0",
+    "nyc": "^11.4.1",
     "promise-polyfill": "^7.1.0",
     "regenerator-runtime": "^0.11.1",
+    "tap-spec": "^4.1.1",
+    "tape": "^4.8.0",
     "webpack": "^3.10.0"
   },
   "optionalDependencies": {

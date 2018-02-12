@@ -2,7 +2,7 @@ const Errors = require('./Errors');
 const _ = require('lodash');
 const {format} = require('date-fns');
 const fnArgs = require('fn-args');
-const Ajv = require('ajv');
+const ajv = new require('ajv')();
 const jwt = require('jsonwebtoken');
 const WebSocket = require('ws');
 const Koa = require('koa');
@@ -134,7 +134,6 @@ class Server
     {
         const schema =
         {
-            'id': this.config.schemaURL,
             '$schema': 'http://json-schema.org/schema#',
             title: this.config.title,
             description: this.config.description,
@@ -142,6 +141,11 @@ class Server
             properties: {},
             additionalProperties: false
         };
+
+        if(this.config.schemaURL)
+        {
+            schema.id = this.config.schemaURL;
+        }
 
         const traverse = (root, namespace) =>
         {
@@ -161,19 +165,16 @@ class Server
                         root.properties[key] =
                         {
                             type: 'object',
+                            required: ['params', 'output'],
                             properties:
                             {
                                 params:
                                 {
-                                    anyOf:
-                                    [
-                                        {type: 'string'},
-                                        {type: 'number'},
-                                        {type: 'object'},
-                                        {type: 'array'},
-                                        {type: 'boolean'},
-                                        {type: 'null'}
-                                    ]
+                                    $ref: 'https://github.com/mhingston/jayson/blob/master/schemas/1.0/method.json#/definitions/any'
+                                },
+                                output:
+                                {
+                                    $ref: 'https://github.com/mhingston/jayson/blob/master/schemas/1.0/method.json#/definitions/any'
                                 }
                             },
                             additionalProperties: false
@@ -410,7 +411,6 @@ class Server
         {
             if(_.isPlainObject(method.schema))
             {
-                const ajv = new Ajv();
                 const isValid = ajv.validate(method.schema, Object.assign(json.params, {context: context}));
     
                 if(!isValid)
