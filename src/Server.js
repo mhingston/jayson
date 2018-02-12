@@ -178,15 +178,20 @@ class Server
                             },
                             additionalProperties: false
                         };
+                    }
 
-                        if(namespace[key].requires)
-                        {
-                            root.properties[key].properties.requires = namespace[key].requires;
-                        }
+                    if(namespace[key].requires)
+                    {
+                        root.properties[key].properties.requires = namespace[key].requires;
+                    }
 
-                        if(namespace[key].timeout)
+                    if(namespace[key].timeout)
+                    {
+                        root.properties[key].properties.timeout =
                         {
-                            root.properties[key].properties.timeout = {type: 'number'}
+                            type: 'number',
+                            minimum: namespace[key].timeout,
+                            maximum: namespace[key].timeout
                         }
                     }
                 }
