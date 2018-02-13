@@ -1,5 +1,6 @@
 {
     "$id": "https://github.com/mhingston/jayson/blob/master/schemas/1.0/method.json",
+    "$schema": "http://json-schema.org/schema#",
     "title": "Jayson Method Schema",
     "definitions": {
         "any": {
