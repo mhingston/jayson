@@ -2,7 +2,7 @@ const Errors = require('./Errors');
 const _ = require('lodash');
 const {format} = require('date-fns');
 const fnArgs = require('fn-args');
-const ajv = new require('ajv')();
+const Ajv = require('ajv');
 const jwt = require('jsonwebtoken');
 const WebSocket = require('ws');
 const Koa = require('koa');
@@ -13,6 +13,9 @@ const compress = require('koa-compress');
 const bodyParser = require('koa-bodyparser');
 const HttpStatus = require('http-status-codes');
 const bytes = require('bytes');
+const path = require('path');
+
+const methodSchema = require(path.join(__dirname, '..', 'schemas', '1.0', 'method.json'));
 
 class Server
 {
@@ -134,20 +137,19 @@ class Server
     {
         const schema =
         {
-            '$schema': 'http://json-schema.org/schema#',
+            $schema: 'http://json-schema.org/schema#',
             title: this.config.title,
             description: this.config.description,
             type: 'object',
-            properties: {},
-            additionalProperties: false
+            properties: {}
         };
 
-        if(this.config.schemaURL)
+        if(this.config.$id)
         {
-            schema.id = this.config.schemaURL;
+            schema.$id = this.config.$id;
         }
 
-        const traverse = (root, namespace) =>
+        const traverse = (root, namespace, paths) =>
         {
             const keys = Object.keys(namespace);
             
@@ -157,27 +159,19 @@ class Server
                 {
                     if(namespace[key].schema)
                     {
-                        root.properties[key] = namespace[key].schema;
+                        root.properties[key] =
+                        {
+                            type: 'function',
+                            properties: namespace[key].schema
+                        }
                     }
 
                     else
                     {
                         root.properties[key] =
                         {
-                            type: 'object',
-                            required: ['params', 'output'],
-                            properties:
-                            {
-                                params:
-                                {
-                                    $ref: 'https://github.com/mhingston/jayson/blob/master/schemas/1.0/method.json#/definitions/any'
-                                },
-                                output:
-                                {
-                                    $ref: 'https://github.com/mhingston/jayson/blob/master/schemas/1.0/method.json#/definitions/any'
-                                }
-                            },
-                            additionalProperties: false
+                            type: 'function',
+                            properties: {}
                         };
                     }
 
@@ -195,6 +189,16 @@ class Server
                             maximum: namespace[key].timeout
                         }
                     }
+
+                    const ajv = new Ajv();
+
+                    if(!ajv.validate(methodSchema, root.properties[key]))
+                    {
+                        const ns = paths.length ? `${paths.join('.')}.${key}` : key;
+                        const error = new Error(`The schema provided for '${ns}' doesn't validate against the method schema (${methodSchema.$id})`);
+                        error.description = ajv.errors;
+                        throw error;
+                    }
                 }
 
                 else if(typeof namespace[key] === 'object')
@@ -202,16 +206,16 @@ class Server
                     root.properties[key] =
                     {
                         type: 'object',
-                        properties: {},
-                        additionalProperties: false
+                        properties: {}
                     };
 
-                    traverse(root.properties[key], namespace[key]);
+                    paths.push(key);
+                    traverse(root.properties[key], namespace[key], paths);
                 }
             }
         }
 
-        traverse(schema, this.methods);
+        traverse(schema, this.methods, []);
         
         return {
             jayson: this.VERSION,
@@ -222,8 +226,10 @@ class Server
 
     async handleCall({json, headers})
     {
+        let schema;
         let result;
         const id = (typeof json.id === 'string' || typeof json.id === 'number' || json.id === null) ? json.id : undefined;
+        const ajv = new Ajv();
         
         if(json.jayson !== this.VERSION)
         {
@@ -244,12 +250,12 @@ class Server
             };
         }
 
-        if(json.discover)
+        else if(json.discover)
         {
             return this.discover(id);
         }
 
-        if(!json.method || typeof json.method !== 'string')
+        else if(!json.method || typeof json.method !== 'string')
         {
             this.logger.log('error', `${headers['x-forwarded-for']} - - [${format(new Date(), 'DD/MMM/YYYY HH:mm:ss ZZ')}] Invalid request`);
 
@@ -312,127 +318,137 @@ class Server
             }
         }
 
-        if(!json.params)
+        if(_.isPlainObject(method.schema))
         {
-            if(_.isPlainObject(method.schema))
+            schema =
+            {
+                type: 'object',
+                properties: {}
+            }
+
+            if(method.schema.params)
+            {
+                schema.properties.params = method.schema.params;
+            }
+            
+            if(method.schema.returns)
+            {
+                schema.properties.returns = method.schema.returns;
+            }
+
+            if(method.requires)
+            {
+                schema.properties.requires = method.requires;
+            }
+
+            if(method.timeout)
+            {
+                schema.properties.timeout = method.timeout;
+            }
+
+            if(!ajv.validate(schema, {params: json.params}))
             {
                 this.logger.log('error', `${headers['x-forwarded-for']} - - [${format(new Date(), 'DD/MMM/YYYY HH:mm:ss ZZ')}] Invalid params`);
-                
+            
                 return {
                     jayson: this.VERSION,
                     error:
                     {
                         code: this.errors.INVALID_PARAMS,
                         message: `Supplied parameters do not match schema for method: ${json.method}`,
-                        data: method.schema
+                        data:
+                        {
+                            expected: method.schema.params
+                        }
                     },
                     id
                 };
             }
+        }
 
-            else
+        if(!json.params)
+        {
+            return new Promise(async (resolve, reject) =>
             {
-                return new Promise(async (resolve, reject) =>
+                const timeout = method.timeout || this.config.timeout;
+                let timerID;
+
+                if(timeout)
                 {
-                    const timeout = method.timeout || this.config.timeout;
-                    let timerID;
-
-                    if(timeout)
+                    timerID = setTimeout(() =>
                     {
-                        timerID = setTimeout(() =>
-                        {
-                            return resolve(
-                            {
-                                jayson: this.VERSION,
-                                error:
-                                {
-                                    code: this.errors.TIMEOUT,
-                                    message: `Request failed to complete in ${timeout}ms.`,
-                                },
-                                id
-                            }); 
-                        }, timeout);
-                    }
-
-                    try
-                    {
-                        result = method(context);
-                        
-                        if(result instanceof Promise)
-                        {
-                            result = await result;
-                        }
-
-                        if(!['string', 'number', 'boolean'].includes(typeof result) && result !== null && !Array.isArray(result) && !_.isPlainObject(result))
-                        {
-                            throw new Error(`Method: ${json.method} returned an invalid value. Expected [String|Number|Boolean|Null|Array|Object].`);
-                        }
-                    }
-
-                    catch(error)
-                    {
-                        this.logger.log('error', `${headers['x-forwarded-for']} - - [${format(new Date(), 'DD/MMM/YYYY HH:mm:ss ZZ')}] Internal error`);
-
                         return resolve(
                         {
                             jayson: this.VERSION,
                             error:
                             {
-                                code: this.errors.INTERNAL_ERROR,
-                                message: `Internal error: ${error.message}`,
-                                data:
-                                {
-                                    columnNumber: process.env.NODE_ENV === 'production' ?  undefined : error.columnNumber,
-                                    description: process.env.NODE_ENV === 'production' ?  undefined : error.description,
-                                    fileName: process.env.NODE_ENV === 'production' ?  undefined : error.fileName,
-                                    lineNumber: process.env.NODE_ENV === 'production' ?  undefined : error.lineNumber,
-                                    message: error.message,
-                                    name: error.name,
-                                    number: error.number,
-                                    stack: process.env.NODE_ENV === 'production' ?  undefined : error.stack
-                                }
+                                code: this.errors.TIMEOUT,
+                                message: `Request failed to complete in ${timeout}ms.`,
                             },
                             id
-                        });
+                        }); 
+                    }, timeout);
+                }
+
+                try
+                {
+                    result = method(context);
+                    
+                    if(result instanceof Promise)
+                    {
+                        result = await result;
                     }
 
-                    clearTimeout(timerID);
+                    if(!['string', 'number', 'boolean'].includes(typeof result) && result != null && !Array.isArray(result) && !_.isPlainObject(result))
+                    {
+                        throw new Error(`Method: ${json.method} returned an invalid value. Expected [String|Number|Boolean|Null|Undefined|Array|Object].`);
+                    }
+
+                    else if(schema.properties.returns && !ajv.validate(schema, {returns: result}))
+                    {
+                        throw new Error(`Method: ${json.method} returned an invalid value.`);
+                    }
+                }
+
+                catch(error)
+                {
+                    this.logger.log('error', `${headers['x-forwarded-for']} - - [${format(new Date(), 'DD/MMM/YYYY HH:mm:ss ZZ')}] Internal error`);
+
                     return resolve(
                     {
                         jayson: this.VERSION,
-                        result,
-                        id
-                    }); 
-                });
-            }
-        }
-
-        if(_.isPlainObject(json.params))
-        {
-            if(_.isPlainObject(method.schema))
-            {
-                const isValid = ajv.validate(method.schema, Object.assign(json.params, {context: context}));
-    
-                if(!isValid)
-                {
-                    this.logger.log('error', `${headers['x-forwarded-for']} - - [${format(new Date(), 'DD/MMM/YYYY HH:mm:ss ZZ')}] Invalid params`);
-
-                    return {
-                        jayson: this.VERSION,
                         error:
                         {
-                            code: this.errors.INVALID_PARAMS,
-                            message: `Supplied parameters do not match schema for method: ${json.method}`,
+                            code: this.errors.INTERNAL_ERROR,
+                            message: `Internal error: ${error.message}`,
                             data:
                             {
-                                expected: method.schema
+                                columnNumber: process.env.NODE_ENV === 'production' ?  undefined : error.columnNumber,
+                                description: process.env.NODE_ENV === 'production' ?  undefined : error.description,
+                                fileName: process.env.NODE_ENV === 'production' ?  undefined : error.fileName,
+                                lineNumber: process.env.NODE_ENV === 'production' ?  undefined : error.lineNumber,
+                                message: error.message,
+                                name: error.name,
+                                number: error.number,
+                                stack: process.env.NODE_ENV === 'production' ?  undefined : error.stack
                             }
                         },
                         id
-                    };
+                    });
                 }
-            }
 
+                clearTimeout(timerID);
+                return resolve(
+                {
+                    jayson: this.VERSION,
+                    result,
+                    id
+                }); 
+            });
+        }
+
+        else if(_.isPlainObject(json.params))
+        {
             return new Promise(async (resolve, reject) =>
             {
                 const timeout = method.timeout || this.config.timeout;
@@ -464,9 +480,14 @@ class Server
                         result = await result;
                     }
 
-                    if(!['string', 'number', 'boolean'].includes(typeof result) && result !== null && !Array.isArray(result) && !_.isPlainObject(result))
+                    if(!['string', 'number', 'boolean'].includes(typeof result) && result != null && !Array.isArray(result) && !_.isPlainObject(result))
                     {
-                        throw new Error(`Method: ${json.method} returned an invalid value. Expected [String|Number|Boolean|Null|Array|Object].`);
+                        throw new Error(`Method: ${json.method} returned an invalid value. Expected [String|Number|Boolean|Null|Undefined|Array|Object].`);
+                    }
+
+                    else if(schema.properties.returns && !ajv.validate(schema, {returns: result}))
+                    {
+                        throw new Error(`Method: ${json.method} returned an invalid value.`);
                     }
                 }
 
@@ -510,7 +531,6 @@ class Server
         else
         {
             const params = json.params.slice();
-            params.unshift(context);
             const args = fnArgs(method);
             const hasRestParams = !!args.filter((arg) => arg.startsWith('...')).length;
 
@@ -557,6 +577,7 @@ class Server
 
                 try
                 {
+                    params.unshift(context);
                     result = method(...params);
                     
                     if(result instanceof Promise)
@@ -564,9 +585,14 @@ class Server
                         result = await result;
                     }
 
-                    if(!['string', 'number', 'boolean'].includes(typeof result) && result !== null && !Array.isArray(result) && !_.isPlainObject(result))
+                    if(!['string', 'number', 'boolean'].includes(typeof result) && result != null && !Array.isArray(result) && !_.isPlainObject(result))
                     {
-                        throw new Error(`Method: ${json.method} returned an invalid value. Expected [String|Number|Boolean|Null|Array|Object].`);
+                        throw new Error(`Method: ${json.method} returned an invalid value. Expected [String|Number|Boolean|Null|Undefined|Array|Object].`);
+                    }
+
+                    else if(schema.properties.returns && !ajv.validate(schema, {returns: result}))
+                    {
+                        throw new Error(`Method: ${json.method} returned an invalid value.`);
                     }
                 }
 

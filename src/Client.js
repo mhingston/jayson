@@ -15,8 +15,6 @@ if(typeof WebSocket !== 'function')
     WebSocket = require('ws');
 }
 
-const ajv = new require('ajv')();
-
 class Client
 {
     constructor(config)
@@ -245,13 +243,10 @@ class Client
 
     async discover()
     {
-        const response = await this.call(
+        return this.call(
         {
             discover: true
         });
-
-        this.schema = response.schema;
-        return this.schema;
     }
 
     call(args)
@@ -303,37 +298,11 @@ class Client
                     try
                     {
                         const json = await response.json();
-                    
-                        if(!body.discover && this.schema)
-                        {
-                            console.log(this.schema.properties.hello)
-                            // console.log(ajv.validate(schema, ));
-                            // const a = {definitions: this.schema.definitions};
-                            // a[body.method] = this.schema.properties[body.method];
-                            // const validate = ajv.compile(a);
-                            // const valid = validate(body.params)
-                            // console.log(valid)
-                            // const validate = ajv.addSchema(this.schema.definitions)
-                            // .compile(this.schema.properties[body.method]);
-                            // console.log(validate)
-
-                            // const valid = ajv.addSchema(this.schema.definitions)
-                            // .addSchema(this.schema.properties[body.method])
-
-                            // const valid = validate(1)
-                            // console.log(validate);
-                            // console.log(1)
-                            // const ajv = new Ajv({schemas: [this.schema.properties[body.method]]});
-                            // console.log(ajv.validate(_.get(this.schema, body.method), body.params))
-                            // console.log(ajv.validate([this.schema.definitions], body.params))
-                        }
-
                         return resolve(json);
                     }
 
                     catch(error)
                     {
-                        console.log(error.message)
                         return reject(new Error(`Could not connect to HTTP server (${this.config.url}) or invalid JSON response.`));
                     }
                 }
