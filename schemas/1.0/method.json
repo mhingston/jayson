@@ -26,7 +26,6 @@
             ]
         }
     },
-    "required": ["params", "output"],
     "properties": {
         "params": {
             "$ref": "#/definitions/any"
