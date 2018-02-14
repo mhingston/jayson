@@ -62,10 +62,8 @@ Remote methods may have attached to them the following properties:
     If you need to reference schema definitions you should pass in your `definitions` schema to the server config. [Example](https://github.com/mhingston/jayson/blob/master/examples/schema-definitions).
 
 * `timeout` {Number} How long to wait (in milliseconds) before timing out the request. If not provided then the `timeout` value will be used from the server config. If that's `undefined` then calls won't timeout.
-    
-## Usage
 
-### Server
+## Server Usage
 
 Note: The server is intended to be run behind a reverse proxy.
 
@@ -130,7 +128,7 @@ const config =
     }
 }
 ```
-* `title` {String} Name of the API instance. Default = `Jayson Server API`.
+* `title` {String} Name of the API instance. Default = `'Jayson Server API'`.
 * `methods` {Object} **(Required)** Object containing the methods exposed to the RPC server.
 * `logger` {Boolean|Function} Set to true to have debug log written to the console or pass in a function to receive the log messages. Default = `false`.
 * `jsonLimit` {String} Maximum size of the message payload. Default = `'1mb'`.
@@ -152,3 +150,87 @@ Instantiate a new RPC server:
 ```javascript
 new Jayson.Server(config);
 ```
+
+## Client Usage
+
+For use in a browser you can either include the bundle [`dist/jayson.min.js`](https://github.com/mhingston/jayson/blob/master/dist/jayson.min.js) or you can import the module using a module loader.
+
+Note: When used in a browser the global variable `window.Jayson` is set.
+
+```javascript
+// Import the module
+const Jayson = require('jayson');
+```
+
+Define your config (default values shown below):
+
+```javascript
+const config =
+{
+    retryDelay: 3000,
+    timeout: 60000,
+    logger: false,
+    url: 'http://127.0.0.1:3000'
+}
+```
+* `retryDelay` {Number} If the connection to the WebSocket server is lost how often should the client attempt to reconnect (in milliseconds). Default = `3000`.
+* `timeout` {Number} How long to wait for a response for every RPC call (in milliseconds). Default = `60000`.
+* `logger` {Boolean|Function} Set to true to have debug log written to the console or pass in a function to receive the log messages. Default = `false`.
+* `url` {String} The URL of the Jayson server. To connect to a WebSocket server use a WebSocket protocol i.e. `ws://` or `wss://`. Default = `'http://127.0.0.1:3000'`.
+
+Instantiate a new RPC client:
+
+```javascript
+const client = new Jayson.Client(config);
+```
+
+### Class: Client
+
+#### client.connect(callback) [async]
+Connect to the RPC server.
+
+* `callback(error, client)` {Function} Callback function (optional).
+  * `error` {Object|Null} Error object.
+  * `client` {Object} The client instance.
+
+#### client.discover() [async]
+Retrieve the RPC methods schema from the RPC server. This is necessary to validate future RPC calls. If you don't call this method then schema validation will be disabled.
+
+* `callback(error, client)` {Function} Callback function.
+  * `error` {Object|Null} Error object.
+  * `client` {Object} The client instance.
+
+#### client.call(args) [async]
+
+Call a method on the RPC server. 
+
+* `args` {Object|Array`<Object>`}.
+  * `method` {String} **(Required)** Name of the RPC method to call.
+  * `params` {Array|Object} Arguments to pass to the RPC method. Be aware that your params will be serialized as JSON (i.e. [`JSON.stringify`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify)).
+  * `auth` {String} A [JWT](https://github.com/auth0/node-jsonwebtoken).
+  * `timeout` {Number} How long to wait for a response for the RPC call (in milliseconds).
+  * `notification` {Boolean} Whether the call is a notification or not (i.e. expects a response).
+  * `callback` {Function} Callback function.
+    * `error` {Object} Error object.
+    * `result` {String|Number|Boolean|Null|Undefined|Array|Object} Result from the RPC call.
+
+### Example
+
+```javascript
+client.connect()
+.then(() => client.discover())
+.then(() => client.call(
+{
+    method: 'foo'
+}))
+.then(response =>
+{
+    console.log(response);
+})
+.catch(error =>
+{
+    console.log(error.message);
+})
+```
+
+See the [examples](https://github.com/mhingston/jayson/blob/master/examples) folder for more.

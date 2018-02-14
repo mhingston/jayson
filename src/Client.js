@@ -21,6 +21,7 @@ class Client
     {
         config.retryDelay = config.retryDelay || 3000;
         config.timeout = config.timeout || 60000;
+        config.url = config.url || 'http://127.0.0.1:3000';
         this.config = config;
         
         if(config.logger && typeof config.logger.log === 'function')
@@ -241,7 +242,7 @@ class Client
         });
     }
 
-    async discover()
+    discover()
     {
         return this.call(
         {
@@ -317,7 +318,27 @@ class Client
                             {
                                 if(typeof call.callback === 'function')
                                 {
-                                    call.callback(response);
+                                    if(response.error)
+                                    {
+                                        const error = new Error(response.error.message);
+
+                                        for(const key in response.error)
+                                        {
+                                            error[key] = response.error[key];
+                                        }
+
+                                        call.callback(error);
+                                    }
+
+                                    else if(response.result)
+                                    {
+                                        call.callback(null, response.result);
+                                    }
+
+                                    else
+                                    {
+                                        call.callback();
+                                    }
                                 }
     
                                 return resolve(response);

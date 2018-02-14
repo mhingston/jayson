@@ -225,7 +225,7 @@ class Server
         return {
             jayson: this.VERSION,
             id,
-            schema
+            result: schema
         }
     }
 
@@ -628,7 +628,7 @@ class Server
         {
             const response = await this.handleCall({json, headers});
             const body = JSON.stringify(response);
-            const isOversized = this.config.jsonLimit && body.length > bytes.parse(this.config.jsonLimit)
+            const isOversized = this.config.jsonLimit && body.length > bytes.parse(this.config.jsonLimit);
 
             if(ws && response.id !== undefined)
             {
@@ -660,7 +660,7 @@ class Server
             let batch = await Promise.all(items);
             batch = _.filter(batch, (response) => response.id !== undefined);
             const body = JSON.stringify(batch);
-            const isOversized = this.config.jsonLimit && body.length > bytes.parse(this.config.jsonLimit)
+            const isOversized = this.config.jsonLimit && body.length > bytes.parse(this.config.jsonLimit);
             
             if(ws && batch.length)
             {

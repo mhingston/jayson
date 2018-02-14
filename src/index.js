@@ -13,5 +13,5 @@ if(process.env.NODE_ENV !== 'browser')
 
 else
 {
-    module.exports = global.Jayson = Client;
+    module.exports = global.Jayson = {Client};
 }
