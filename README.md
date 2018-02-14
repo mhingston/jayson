@@ -28,7 +28,7 @@ Jayson uses a custom version of JSON-RPC for messages. The specification is base
 
 * The following additional properties can be defined within a `request` object:
 
-    * `auth` {String} A JWT providing the authentication context.
+    * `auth` {String} A [JWT](https://github.com/auth0/node-jsonwebtoken) providing the authentication context.
 
 The reason for baking auth into JSON-RPC was that I felt it should be part of the protocol and not reliant on the different authentication mechanisms available within the transport layers (i.e. HTTP, WebsSocket).
 
@@ -207,7 +207,7 @@ Call a method on the RPC server.
 * `args` {Object|Array`<Object>`}.
   * `method` {String} **(Required)** Name of the RPC method to call.
   * `params` {Array|Object} Arguments to pass to the RPC method. Be aware that your params will be serialized as JSON (i.e. [`JSON.stringify`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify)).
-  * `auth` {String} A [JWT](https://github.com/auth0/node-jsonwebtoken).
+  * `auth` {String} A [JWT](https://github.com/auth0/node-jsonwebtoken) providing the authentication context.
   * `timeout` {Number} How long to wait for a response for the RPC call (in milliseconds).
   * `notification` {Boolean} Whether the call is a notification or not (i.e. expects a response).
   * `callback` {Function} Callback function.
