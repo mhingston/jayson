@@ -503,7 +503,7 @@ class Server
 
         else
         {
-            const params = Array.isArray(json.params) ? json.params : [json.params];
+            const params = [json.params];
             params.unshift(context);
             const args = fnArgs(method);
             const hasRestParams = !!args.filter((arg) => arg.startsWith('...')).length;
