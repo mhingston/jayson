@@ -43,6 +43,8 @@ class Server
         this.VERSION = '1.0';
         this.methods = config.methods;
         config.title = config.title || 'Jayson Server API'
+        config.jwt = config.jwt || {};
+        config.jwt.secret = config.jwt.secret || 'sauce';
         this.config = {};
         
         for(const key in config)
@@ -55,6 +57,7 @@ class Server
         
         if(config.http)
         {
+            config.http.port = config.http.port || 3000;
             const router = new Router();
 
             router.post('/', async (ctx, next) =>
@@ -98,6 +101,9 @@ class Server
 
         if(config.ws)
         {   
+            config.ws.port = config.ws.port || 3001;
+            config.ws.heartbeat = config.ws.heartbeat || 30000;
+            
             this.wss = new WebSocket.Server(config.ws);
             this.wss.on('connection', (ws, req) =>
             {
@@ -123,7 +129,7 @@ class Server
                     ws.isAlive = false;
                     ws.ping(() => {});
                 });
-            }, config.ws.heartbeat || 30000);
+            }, config.ws.heartbeat);
         }
     }
 
@@ -177,11 +183,6 @@ class Server
                             type: 'function',
                             properties: {}
                         };
-                    }
-
-                    if(namespace[key].requires)
-                    {
-                        root.properties[key].properties.requires = namespace[key].requires;
                     }
 
                     if(namespace[key].timeout)
@@ -242,7 +243,7 @@ class Server
                 throw new Error(`Method: ${json.method} returned an invalid value. Expected [String|Number|Boolean|Null|Undefined|Array|Object].`);
             }
 
-            else if(schema.properties.returns && !ajv.validate(schema, {returns: result}))
+            else if(_.get(schema, 'properties.returns') && !ajv.validate(schema, {returns: result}))
             {
                 throw new Error(`Method: ${json.method} returned an invalid value.`);
             }
@@ -350,32 +351,6 @@ class Server
 
         this.logger.log('info', `${headers['x-forwarded-for']} - - [${format(new Date(), 'DD/MMM/YYYY HH:mm:ss ZZ')}] Call method: ${method.name}`);
 
-        if(_.isPlainObject(method.requires))
-        {
-            try
-            {
-                context.auth = jwt.verify(json.auth, this.config.jwt.secret, this.config.jwt.options);
-
-                if(!ajv.validate(method.requires, context.auth))
-                {
-                    throw new Error(`Authorization context doesn't validate against method requirement.`);
-                }
-            }
-
-            catch(error)
-            {
-                return {
-                    jayson: this.VERSION,
-                    error:
-                    {
-                        code: this.errors.UNAUTHORIZED,
-                        message: error.message
-                    },
-                    id
-                };
-            }
-        }
-
         if(_.isPlainObject(method.schema))
         {
             schema =
@@ -389,24 +364,40 @@ class Server
                 schema.definitions = this.config.definitions
             }
 
-            if(method.schema.params)
+            for(const key in method.schema)
             {
-                schema.properties.params = method.schema.params;
-            }
-            
-            if(method.schema.returns)
-            {
-                schema.properties.returns = method.schema.returns;
-            }
-
-            if(method.requires)
-            {
-                schema.properties.requires = method.requires;
+                schema.properties[key] = method.schema[key];
             }
 
             if(method.timeout)
             {
                 schema.properties.timeout = method.timeout;
+            }
+
+            if(schema.requires)
+            {
+                try
+                {
+                    context.auth = jwt.verify(json.auth, this.config.jwt.secret, this.config.jwt.options);
+
+                    if(!ajv.validate(schema, {requires: context.auth}))
+                    {
+                        throw new Error(`Authorization context doesn't validate against method requirement.`);
+                    }
+                }
+
+                catch(error)
+                {
+                    return {
+                        jayson: this.VERSION,
+                        error:
+                        {
+                            code: this.errors.UNAUTHORIZED,
+                            message: error.message
+                        },
+                        id
+                    };
+                }
             }
 
             if(!ajv.validate(schema, {params: json.params}))
@@ -609,7 +600,7 @@ class Server
                     error:
                     {
                         code: this.errors.PARSE_ERROR,
-                        message: 'Unable to parse JSON',
+                        message: `Unable to parse JSON. ${error.message}`,
                         data:
                         {
                             stack: process.env.NODE_ENV === 'production' ?  undefined : error.stack
@@ -623,13 +614,44 @@ class Server
         if(!Array.isArray(json))
         {
             const response = await this.handleCall({json, headers});
+            const body = JSON.stringify(response);
+            const isOversized = this.config.jsonLimit && body.length > bytes.parse(this.config.jsonLimit)
+
+            const oversizedMessage = () =>
+            {
+                return {
+                    jayson: this.VERSION,
+                    error:
+                    {
+                        code: this.errors.OVERSIZED_RESPONSE,
+                        message: `Response body exceeds jsonLimit (${this.jsonLimit}).`
+                    },
+                    id: response.id
+                }
+            }
 
             if(ws && response.id !== undefined)
             {
-                ws.send(JSON.stringify(response));
+                if(isOversized)
+                {
+                    ws.send(JSON.stringify(oversizedMessage()));
+                }
+
+                else
+                {
+                    ws.send(body);
+                }
             }
 
-            return response;
+            if(isOversized)
+            {
+                return oversizedMessage();
+            }
+            
+            else
+            {
+                return response;
+            }
         }
 
         else
@@ -637,13 +659,31 @@ class Server
             const items = _.map(json, (item) => this.handleCall({json: item, headers}));
             let batch = await Promise.all(items);
             batch = _.filter(batch, (response) => response.id !== undefined);
+            const body = JSON.stringify(batch);
+            const isOversized = this.config.jsonLimit && body.length > bytes.parse(this.config.jsonLimit)
             
             if(ws && batch.length)
             {
-                ws.send(JSON.stringify(batch));
+                if(isOversized)
+                {
+                    ws.send(JSON.stringify(oversizedMessage()));
+                }
+
+                else
+                {
+                    ws.send(body);
+                }
             }
 
-            return batch;
+            if(isOversized)
+            {
+                return oversizedMessage();
+            }
+
+            else
+            {
+                return batch;
+            }
         }
     }
 }
