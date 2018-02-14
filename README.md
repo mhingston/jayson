@@ -65,7 +65,7 @@ Remote methods may have attached to them the following properties:
 
 ## Server Usage
 
-Note: The server is intended to be run behind a reverse proxy.
+**Note: The server is intended to be run behind a reverse proxy.**
 
 ```javascript
 // Import the module
@@ -101,6 +101,12 @@ class Method
 const methods = new Method();
 ```
 
+**Note: The Jayson server passes a `context` object argument to every method that's called. If the `params` property of a `request` is an Object then the property `context` will be added to that object. If the `params` property is any other type then the first argument passed to the method will be the `context` object.**
+
+`context` {Object} Method context.
+* `headers` {Object} Request headers.
+* `auth` {String} A [JWT](https://github.com/auth0/node-jsonwebtoken) providing the authentication context.
+
 Define your config (default values shown below):
 
 ```javascript
@@ -133,7 +139,7 @@ const config =
 * `description` {String} Description of the API instance.
 * `$id` {String} [JSON Schema ID](https://spacetelescope.github.io/understanding-json-schema/structuring.html#the-id-property).
 * `methods` {Object} **(Required)** Object containing the methods exposed to the RPC server.
-* `definitions` {Object} Schema definitions. Use this when you need to reference shared definitions from method schemas. See the [schema-definitions](https://github.com/mhingston/jayson/blob/master/examples/schema-definitions) for example usage.
+* `definitions` {Object} Schema definitions. Use this when you need to reference shared definitions from method schemas. See the [schema-definitions](https://github.com/mhingston/jayson/blob/master/examples/schema-definitions) example.
 * `logger` {Boolean|Function} Set to true to have debug log written to the console or pass in a function to receive the log messages. Default = `false`.
 * `jsonLimit` {String} Maximum size of the message payload. Default = `'1mb'`.
 * `timeout` {Number|Null} Default timeout for all RPC calls (in milliseconds). Set to `null` to disable default timeout. Default = `60000`.
@@ -149,7 +155,7 @@ const config =
   * `secret` {String|Buffer|Object} See [jwt.sign](https://github.com/auth0/node-jsonwebtoken#jwtsignpayload-secretorprivatekey-options-callback). Default = `'sauce'`.
   * `options` {Object} See [jwt.sign](https://github.com/auth0/node-jsonwebtoken#jwtsignpayload-secretorprivatekey-options-callback).
 
-Note: The config must include a `http` and/or a `ws` property.
+**Note: The config must include a `http` and/or a `ws` property.**
 
 Instantiate a new RPC server:
 ```javascript
@@ -160,7 +166,7 @@ new Jayson.Server(config);
 
 For use in a browser you can either include the bundle [`dist/jayson.min.js`](https://github.com/mhingston/jayson/blob/master/dist/jayson.min.js) or you can import the module using a module loader.
 
-Note: When used in a browser the global variable `window.Jayson` is set.
+**Note: When used in a browser the global variable `window.Jayson` is set.**
 
 ```javascript
 // Import the module
