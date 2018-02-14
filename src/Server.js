@@ -576,6 +576,19 @@ class Server
 
     async handleMessage({message, ws, headers})
     {
+        const oversizedMessage = (id) =>
+        {
+            return {
+                jayson: this.VERSION,
+                error:
+                {
+                    code: this.errors.OVERSIZED_RESPONSE,
+                    message: `Response body exceeds jsonLimit (${this.jsonLimit}).`
+                },
+                id
+            }
+        }
+
         let json = message;
 
         if(ws)
@@ -617,19 +630,6 @@ class Server
             const body = JSON.stringify(response);
             const isOversized = this.config.jsonLimit && body.length > bytes.parse(this.config.jsonLimit)
 
-            const oversizedMessage = () =>
-            {
-                return {
-                    jayson: this.VERSION,
-                    error:
-                    {
-                        code: this.errors.OVERSIZED_RESPONSE,
-                        message: `Response body exceeds jsonLimit (${this.jsonLimit}).`
-                    },
-                    id: response.id
-                }
-            }
-
             if(ws && response.id !== undefined)
             {
                 if(isOversized)
@@ -645,7 +645,7 @@ class Server
 
             if(isOversized)
             {
-                return oversizedMessage();
+                return oversizedMessage(response.id);
             }
             
             else
