@@ -20,7 +20,7 @@ class Client
     constructor(config)
     {
         config.retryDelay = config.retryDelay || 3000;
-        config.timeout = config.timeout || 60000;
+        config.timeout = config.timeout !== undefined ? config.timeout : 60000;
         config.url = config.url || 'http://127.0.0.1:3000';
         this.config = config;
         

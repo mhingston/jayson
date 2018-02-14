@@ -43,7 +43,7 @@ class Server
         this.VERSION = '1.0';
         this.methods = config.methods;
         config.title = config.title || 'Jayson Server API';
-        config.timeout = config.timeout || 60000;
+        config.timeout = config.timeout !== undefined ? config.timeout : 60000;
         config.jwt = config.jwt || {};
         config.jwt.secret = config.jwt.secret || 'sauce';
         this.config = {};

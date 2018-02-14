@@ -61,7 +61,7 @@ Remote methods may have attached to them the following properties:
 
     If you need to reference schema definitions you should pass in your `definitions` schema to the server config. [Example](https://github.com/mhingston/jayson/blob/master/examples/schema-definitions).
 
-* `timeout` {Number} How long to wait (in milliseconds) before timing out the request. If not provided then the `timeout` value will be used from the server config. If that's `undefined` then calls won't timeout.
+* `timeout` {Number} How long to wait (in milliseconds) before timing out the request. If not provided then the `timeout` value will be used from the server config.
 
 ## Server Usage
 
@@ -133,7 +133,7 @@ const config =
 * `methods` {Object} **(Required)** Object containing the methods exposed to the RPC server.
 * `logger` {Boolean|Function} Set to true to have debug log written to the console or pass in a function to receive the log messages. Default = `false`.
 * `jsonLimit` {String} Maximum size of the message payload. Default = `'1mb'`.
-* `timeout` {Number} Default timeout for all RPC calls (in milliseconds). Default = `60000`.
+* `timeout` {Number|Null} Default timeout for all RPC calls (in milliseconds). Set to `null` to disable default timeout. Default = `60000`.
 * `http` {Object}.
   * `port` {Number} Port to listen to HTTP connections on. Default = `3000`.
   * `cors` {Object} CORS options, see [koa2-cors](https://github.com/zadzbw/koa2-cors#options). Default = `{}`.
