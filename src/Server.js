@@ -14,7 +14,6 @@ const bodyParser = require('koa-bodyparser');
 const HttpStatus = require('http-status-codes');
 const bytes = require('bytes');
 const path = require('path');
-
 const methodSchema = require(path.join(__dirname, '..', 'schemas', '1.0', 'method.json'));
 
 class Server
@@ -149,6 +148,11 @@ class Server
             schema.$id = this.config.$id;
         }
 
+        if(this.config.definitions)
+        {
+            schema.definitions = this.config.definitions;
+        }
+
         const traverse = (root, namespace, paths) =>
         {
             const keys = Object.keys(namespace);
@@ -230,6 +234,60 @@ class Server
         let result;
         const id = (typeof json.id === 'string' || typeof json.id === 'number' || json.id === null) ? json.id : undefined;
         const ajv = new Ajv();
+
+        const errorCheck = () =>
+        {
+            if(!['string', 'number', 'boolean'].includes(typeof result) && result != null && !Array.isArray(result) && !_.isPlainObject(result))
+            {
+                throw new Error(`Method: ${json.method} returned an invalid value. Expected [String|Number|Boolean|Null|Undefined|Array|Object].`);
+            }
+
+            else if(schema.properties.returns && !ajv.validate(schema, {returns: result}))
+            {
+                throw new Error(`Method: ${json.method} returned an invalid value.`);
+            }
+        }
+
+        const errorResponse = (error) =>
+        {
+            return {
+                jayson: this.VERSION,
+                error:
+                {
+                    code: this.errors.INTERNAL_ERROR,
+                    message: `Internal error. ${error.message}`,
+                    data:
+                    {
+                        columnNumber: process.env.NODE_ENV === 'production' ?  undefined : error.columnNumber,
+                        description: process.env.NODE_ENV === 'production' ?  undefined : error.description,
+                        fileName: process.env.NODE_ENV === 'production' ?  undefined : error.fileName,
+                        lineNumber: process.env.NODE_ENV === 'production' ?  undefined : error.lineNumber,
+                        message: error.message,
+                        name: error.name,
+                        number: error.number,
+                        stack: process.env.NODE_ENV === 'production' ?  undefined : error.stack
+                    }
+                },
+                id
+            };
+        }
+
+        const createTimer = (timeout) =>
+        {
+            return setTimeout(() =>
+            {
+                return resolve(
+                {
+                    jayson: this.VERSION,
+                    error:
+                    {
+                        code: this.errors.TIMEOUT,
+                        message: `Request failed to complete in ${timeout}ms.`,
+                    },
+                    id
+                }); 
+            }, timeout)
+        }
         
         if(json.jayson !== this.VERSION)
         {
@@ -326,6 +384,11 @@ class Server
                 properties: {}
             }
 
+            if(this.config.definitions)
+            {
+                schema.definitions = this.config.definitions
+            }
+
             if(method.schema.params)
             {
                 schema.properties.params = method.schema.params;
@@ -375,19 +438,7 @@ class Server
 
                 if(timeout)
                 {
-                    timerID = setTimeout(() =>
-                    {
-                        return resolve(
-                        {
-                            jayson: this.VERSION,
-                            error:
-                            {
-                                code: this.errors.TIMEOUT,
-                                message: `Request failed to complete in ${timeout}ms.`,
-                            },
-                            id
-                        }); 
-                    }, timeout);
+                    timerID = createTimer(timeout);
                 }
 
                 try
@@ -399,42 +450,13 @@ class Server
                         result = await result;
                     }
 
-                    if(!['string', 'number', 'boolean'].includes(typeof result) && result != null && !Array.isArray(result) && !_.isPlainObject(result))
-                    {
-                        throw new Error(`Method: ${json.method} returned an invalid value. Expected [String|Number|Boolean|Null|Undefined|Array|Object].`);
-                    }
-
-                    else if(schema.properties.returns && !ajv.validate(schema, {returns: result}))
-                    {
-                        throw new Error(`Method: ${json.method} returned an invalid value.`);
-                    }
+                    errorCheck();
                 }
 
                 catch(error)
                 {
                     this.logger.log('error', `${headers['x-forwarded-for']} - - [${format(new Date(), 'DD/MMM/YYYY HH:mm:ss ZZ')}] Internal error`);
-
-                    return resolve(
-                    {
-                        jayson: this.VERSION,
-                        error:
-                        {
-                            code: this.errors.INTERNAL_ERROR,
-                            message: `Internal error: ${error.message}`,
-                            data:
-                            {
-                                columnNumber: process.env.NODE_ENV === 'production' ?  undefined : error.columnNumber,
-                                description: process.env.NODE_ENV === 'production' ?  undefined : error.description,
-                                fileName: process.env.NODE_ENV === 'production' ?  undefined : error.fileName,
-                                lineNumber: process.env.NODE_ENV === 'production' ?  undefined : error.lineNumber,
-                                message: error.message,
-                                name: error.name,
-                                number: error.number,
-                                stack: process.env.NODE_ENV === 'production' ?  undefined : error.stack
-                            }
-                        },
-                        id
-                    });
+                    return resolve(errorResponse(error));
                 }
 
                 clearTimeout(timerID);
@@ -456,19 +478,7 @@ class Server
 
                 if(timeout)
                 {
-                    timerID = setTimeout(() =>
-                    {
-                        return resolve(
-                        {
-                            jayson: this.VERSION,
-                            error:
-                            {
-                                code: this.errors.TIMEOUT,
-                                message: `Request failed to complete in ${timeout}ms.`,
-                            },
-                            id
-                        }); 
-                    }, timeout);
+                    timerID = createTimer(timeout);
                 }
 
                 try
@@ -480,42 +490,13 @@ class Server
                         result = await result;
                     }
 
-                    if(!['string', 'number', 'boolean'].includes(typeof result) && result != null && !Array.isArray(result) && !_.isPlainObject(result))
-                    {
-                        throw new Error(`Method: ${json.method} returned an invalid value. Expected [String|Number|Boolean|Null|Undefined|Array|Object].`);
-                    }
-
-                    else if(schema.properties.returns && !ajv.validate(schema, {returns: result}))
-                    {
-                        throw new Error(`Method: ${json.method} returned an invalid value.`);
-                    }
+                    errorCheck();
                 }
 
                 catch(error)
                 {
                     this.logger.log('error', `${headers['x-forwarded-for']} - - [${format(new Date(), 'DD/MMM/YYYY HH:mm:ss ZZ')}] Internal error`);
-
-                    return resolve(
-                    {
-                        jayson: this.VERSION,
-                        error:
-                        {
-                            code: this.errors.INTERNAL_ERROR,
-                            message: `Internal error: ${error.message}`,
-                            data:
-                            {
-                                columnNumber: process.env.NODE_ENV === 'production' ?  undefined : error.columnNumber,
-                                description: process.env.NODE_ENV === 'production' ?  undefined : error.description,
-                                fileName: process.env.NODE_ENV === 'production' ?  undefined : error.fileName,
-                                lineNumber: process.env.NODE_ENV === 'production' ?  undefined : error.lineNumber,
-                                message: error.message,
-                                name: error.name,
-                                number: error.number,
-                                stack: process.env.NODE_ENV === 'production' ?  undefined : error.stack
-                            }
-                        },
-                        id
-                    });
+                    return resolve(errorResponse(error));
                 }
 
                 clearTimeout(timerID);
@@ -560,19 +541,7 @@ class Server
 
                 if(timeout)
                 {
-                    timerID = setTimeout(() =>
-                    {
-                        return resolve(
-                        {
-                            jayson: this.VERSION,
-                            error:
-                            {
-                                code: this.errors.TIMEOUT,
-                                message: `Request failed to complete in ${timeout}ms.`,
-                            },
-                            id
-                        }); 
-                    }, timeout);
+                    timerID = createTimer(timeout);
                 }
 
                 try
@@ -585,42 +554,13 @@ class Server
                         result = await result;
                     }
 
-                    if(!['string', 'number', 'boolean'].includes(typeof result) && result != null && !Array.isArray(result) && !_.isPlainObject(result))
-                    {
-                        throw new Error(`Method: ${json.method} returned an invalid value. Expected [String|Number|Boolean|Null|Undefined|Array|Object].`);
-                    }
-
-                    else if(schema.properties.returns && !ajv.validate(schema, {returns: result}))
-                    {
-                        throw new Error(`Method: ${json.method} returned an invalid value.`);
-                    }
+                    errorCheck();
                 }
 
                 catch(error)
                 {
                     this.logger.log('error', `${headers['x-forwarded-for']} - - [${format(new Date(), 'DD/MMM/YYYY HH:mm:ss ZZ')}] Internal error`);
-
-                    return resolve(
-                    {
-                        jayson: this.VERSION,
-                        error:
-                        {
-                            code: this.errors.INTERNAL_ERROR,
-                            message: `Internal error: ${error.message}`,
-                            data:
-                            {
-                                columnNumber: process.env.NODE_ENV === 'production' ?  undefined : error.columnNumber,
-                                description: process.env.NODE_ENV === 'production' ?  undefined : error.description,
-                                fileName: process.env.NODE_ENV === 'production' ?  undefined : error.fileName,
-                                lineNumber: process.env.NODE_ENV === 'production' ?  undefined : error.lineNumber,
-                                message: error.message,
-                                name: error.name,
-                                number: error.number,
-                                stack: process.env.NODE_ENV === 'production' ?  undefined : error.stack
-                            }
-                        },
-                        id
-                    });
+                    return resolve(errorResponse(error));
                 }
 
                 return resolve(
