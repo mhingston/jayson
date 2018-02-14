@@ -14,14 +14,13 @@ npm install mhingston/jayson
 
 Jayson uses a custom version of JSON-RPC for messages. The specification is based on [JSON-RPC 2.0](http://www.jsonrpc.org/specification) with the following changes:
 
-* The `request` and `response` objects **must** contain the property `jayson` along with the version being used **in place** of the `jsonrpc` property.
+* The `request` and `response` objects **must** contain the property `jayson` with the value set to the version of the API being used. This property **replaces** the `jsonrpc` property.
 
   e.g.
 
   ```json
   {
       "jayson": "1.0"
-      ...
   }
   ```
 
