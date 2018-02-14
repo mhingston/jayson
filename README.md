@@ -133,7 +133,7 @@ const config =
 * `description` {String} Description of the API instance.
 * `$id` {String} [JSON Schema ID](https://spacetelescope.github.io/understanding-json-schema/structuring.html#the-id-property).
 * `methods` {Object} **(Required)** Object containing the methods exposed to the RPC server.
-* `definitions` {Object} Schema definitions. Use this when you need to reference shared definitions from method schemas. See the[schema-definitions]((https://github.com/mhingston/jayson/blob/master/examples/schema-definitions)) for example usage.
+* `definitions` {Object} Schema definitions. Use this when you need to reference shared definitions from method schemas. See the [schema-definitions](https://github.com/mhingston/jayson/blob/master/examples/schema-definitions) for example usage.
 * `logger` {Boolean|Function} Set to true to have debug log written to the console or pass in a function to receive the log messages. Default = `false`.
 * `jsonLimit` {String} Maximum size of the message payload. Default = `'1mb'`.
 * `timeout` {Number|Null} Default timeout for all RPC calls (in milliseconds). Set to `null` to disable default timeout. Default = `60000`.
