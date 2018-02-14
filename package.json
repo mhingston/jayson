@@ -34,7 +34,6 @@
     "@babel/preset-env": "^7.0.0-beta.39",
     "@babel/preset-es2015": "^7.0.0-beta.39",
     "babel-loader": "^8.0.0-beta.0",
-    "node-docson": "^0.4.6",
     "nyc": "^11.4.1",
     "promise-polyfill": "^7.1.0",
     "regenerator-runtime": "^0.11.1",
