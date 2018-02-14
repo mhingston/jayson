@@ -503,7 +503,8 @@ class Server
 
         else
         {
-            const params = json.params.slice();
+            const params = Array.isArray(json.params) ? json.params : [json.params];
+            params.unshift(context);
             const args = fnArgs(method);
             const hasRestParams = !!args.filter((arg) => arg.startsWith('...')).length;
 
@@ -538,7 +539,6 @@ class Server
 
                 try
                 {
-                    params.unshift(context);
                     result = method(...params);
                     
                     if(result instanceof Promise)
