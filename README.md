@@ -110,6 +110,7 @@ const config =
     methods,
     logger: false,
     jsonLimit: '1mb',
+    timeout: 60000,
     http:
     {
         port: 3000,
@@ -132,6 +133,7 @@ const config =
 * `methods` {Object} **(Required)** Object containing the methods exposed to the RPC server.
 * `logger` {Boolean|Function} Set to true to have debug log written to the console or pass in a function to receive the log messages. Default = `false`.
 * `jsonLimit` {String} Maximum size of the message payload. Default = `'1mb'`.
+* `timeout` {Number} Default timeout for all RPC calls (in milliseconds). Default = `60000`.
 * `http` {Object}.
   * `port` {Number} Port to listen to HTTP connections on. Default = `3000`.
   * `cors` {Object} CORS options, see [koa2-cors](https://github.com/zadzbw/koa2-cors#options). Default = `{}`.
