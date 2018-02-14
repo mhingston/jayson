@@ -634,7 +634,7 @@ class Server
             {
                 if(isOversized)
                 {
-                    ws.send(JSON.stringify(oversizedMessage()));
+                    ws.send(JSON.stringify(oversizedMessage(response.id)));
                 }
 
                 else
