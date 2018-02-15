@@ -78,7 +78,7 @@ class Client
                 this.ws.off('open', openFn);
                 this.logger.log('info', `Connection established.`);
                 resolved = true;
-                callback();
+                callback(null, this);
                 return resolve(this);
             };
 
@@ -115,7 +115,7 @@ class Client
             if(!/^wss?:\/\//.test(this.config.url) || (this.ws && this.ws.readyState === this.readyState.OPEN))
             {
                 resolved = true;
-                callback();
+                callback(null, this);
                 return resolve(this);
             }
 
