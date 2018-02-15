@@ -1,17 +1,21 @@
 const _ = require('lodash');
 const test = require('tape');
 const Jayson = require('../src/index');
+const Errors = require('../src/Errors');
+
 const methods =
 {
-    foo: () => 'bar'
-}
+    foo: (...args) => 'hello',
+    bar: (...args) => 'This is a really long string... This is a really long string... This is a really long string... This is a really long string... This is a really long string... This is a really long string... This is a really long string... This is a really long string... This is a really long string... This is a really long string... This is a really long string... This is a really long string... This is a really long string... This is a really long string... This is a really long string... This is a really long string... This is a really long string...'
+};
+
 const definitions =
 {
     something:
     {
         type: 'string'
     }
-}
+};
 
 const config =
 [
@@ -24,7 +28,7 @@ const config =
             methods,
             definitions,
             logger: false,
-            jsonLimit: '1mb',
+            jsonLimit: '512b',
             timeout: 60000,
             http:
             {
@@ -87,11 +91,11 @@ tests.push(() =>
 {
     return new Promise((resolve, reject) =>
     {
-        test('Client should connect to the server (HTTP).', async (t) =>
+        test('Client should connect to the server (WS).', async (t) =>
         {
             try
             {
-                await client[0].connect();
+                await client[1].connect();
                 t.pass('Client connected to server.');
             }    
 
@@ -133,33 +137,146 @@ tests.push(() =>
     });
 });
 
-// tests.push(() =>
-// {
-//     return new Promise((resolve, reject) =>
-//     {
-//         test('Server (WS) should return a method schema.', async (t) =>
-//         {
-//             try
-//             {
-//                 const schema = await client[1].discover();
-//                 console.log(schema)
-//                 t.equal('object', typeof schema, 'schema is an object.');
-//                 t.equal(config[0].server.title, schema.title, `title property is equal to "${config[0].server.title}"`);
-//                 t.equal(config[0].server.description, schema.description, `description property is equal to "${config[0].server.description}"`);
-//                 t.equal(config[0].server.$id, schema.$id, `$id property is equal to "${config[0].server.$id}"`);
-//                 t.deepLooseEqual(config[0].server.definitions, schema.definitions, 'defintions property is equal to server config definitions.');
-//             }    
+tests.push(() =>
+{
+    return new Promise((resolve, reject) =>
+    {
+        test('Server (WS) should return a method schema.', async (t) =>
+        {
+            try
+            {
+                const schema = await client[0].discover();
+                t.equal('object', typeof schema, 'schema is an object.');
+                t.equal(config[0].server.title, schema.title, `title property is equal to "${config[0].server.title}"`);
+                t.equal(config[0].server.description, schema.description, `description property is equal to "${config[0].server.description}"`);
+                t.equal(config[0].server.$id, schema.$id, `$id property is equal to "${config[0].server.$id}"`);
+                t.deepLooseEqual(config[0].server.definitions, schema.definitions, 'defintions property is equal to server config definitions.');
+            }    
 
-//             catch(error)
-//             {
-//                 t.fail('Request failed.');
-//             }
+            catch(error)
+            {
+                t.fail('Request failed.');
+            }
 
-//             t.end();
-//             return resolve(true);
-//         }); 
-//     });
-// });
+            t.end();
+            return resolve(true);
+        }); 
+    });
+});
+
+tests.push(() =>
+{
+    return new Promise((resolve, reject) =>
+    {
+        test('Client should call method "foo" on server (HTTP).', async (t) =>
+        {
+            try
+            {
+                const response = await client[0].call(
+                {
+                    method: 'foo'
+                });
+                t.equal('object', typeof response, 'response is an object.');
+                t.equal('1.0', response.jayson, 'valid jayson response.');
+                t.equal('hello', response.result, '"result" property is equal to "hello".');
+            }    
+
+            catch(error)
+            {
+                t.fail('Request failed.');
+            }
+
+            t.end();
+            return resolve(true);
+        }); 
+    });
+});
+
+tests.push(() =>
+{
+    return new Promise((resolve, reject) =>
+    {
+        test('Client should call method "foo" on server (WS).', async (t) =>
+        {
+            try
+            {
+                const response = await client[1].call(
+                {
+                    method: 'foo'
+                });
+                t.equal('object', typeof response, 'response is an object.');
+                t.equal('1.0', response.jayson, 'valid jayson response.');
+                t.equal('hello', response.result, '"result" property is equal to "hello".');
+            }    
+
+            catch(error)
+            {
+                t.fail('Request failed.');
+            }
+
+            t.end();
+            return resolve(true);
+        }); 
+    });
+});
+
+tests.push(() =>
+{
+    return new Promise((resolve, reject) =>
+    {
+        test('Client should call method "bar" on server (HTTP).', async (t) =>
+        {
+            try
+            {
+                const response = await client[0].call(
+                {
+                    method: 'bar'
+                });
+                t.equal('object', typeof response, 'response is an object.');
+                t.equal('1.0', response.jayson, 'valid jayson response.');
+                t.equal('object', typeof response.error, '"error" property is an object.');
+                t.equal(Errors.OVERSIZED_RESPONSE, response.error.code, 'Error code is equal to "OVERSIZED_RESPONSE".');
+            }    
+
+            catch(error)
+            {
+                t.fail('Request failed.');
+            }
+
+            t.end();
+            return resolve(true);
+        }); 
+    });
+});
+
+tests.push(() =>
+{
+    return new Promise((resolve, reject) =>
+    {
+        test('Client should call method "bar" on server (WS).', async (t) =>
+        {
+            try
+            {
+                const response = await client[1].call(
+                {
+                    method: 'bar'
+                });
+                t.equal('object', typeof response, 'response is an object.');
+                t.equal('1.0', response.jayson, 'valid jayson response.');
+                t.equal('object', typeof response.error, '"error" property is an object.');
+                t.equal(Errors.OVERSIZED_RESPONSE, response.error.code, 'Error code is equal to "OVERSIZED_RESPONSE".');
+            }    
+
+            catch(error)
+            {
+                t.fail('Request failed.');
+            }
+
+            t.end();
+            return resolve(true);
+        }); 
+    });
+});
 
 const main = async () =>
 {
