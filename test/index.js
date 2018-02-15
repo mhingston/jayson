@@ -1,495 +1,174 @@
 const _ = require('lodash');
 const test = require('tape');
 const Jayson = require('../src/index');
-
-const singleton =
+const methods =
 {
-    foo: () => 'hello',
-    bar: ({a = 1, b = 2, c = 3}) => a + b + c,
-    baz: 'Not callable',
-    qux: () => new Date(),
-    quux: () => () => {},
-    quuz: () => new Promise((resolve, reject) => resolve(true)),
-    corge: ({a = 'world'}) => new Promise((resolve, reject) => resolve('hello ' + a)),
-    wibble:
+    foo: () => 'bar'
+}
+const definitions =
+{
+    something:
     {
-        wobble:
-        {
-            wubble:
-            {
-                flib: (a) => new Date(),
-                flob: () => new Promise((resolve, reject) => reject(false)),
-                flub: (a, b, c) => a + b + c 
-            }
-        }
-    },
-    schema:
+        type: 'string'
+    }
+}
+
+const config =
+[
     {
-        bar:
+        server:
         {
-            properties:
+            title: 'Test API Server',
+            description: 'A description goes here',
+            $id: 'https://github.com/mhingston/jayson/blob/master/test/index.js',
+            methods,
+            definitions,
+            logger: false,
+            jsonLimit: '1mb',
+            timeout: 60000,
+            http:
             {
-                a:
-                {
-                    type: 'number'
-                },
-                b:
-                {
-                    type: 'number'
-                },
-                c:
-                {
-                    type: 'number'
-                }
+                port: 33333
             },
-            minProperties: 3,
-            additionalProperties: false
-        }
+            ws:
+            {
+                port: 33334,
+                heartbeat: 10000
+            },
+            jwt:
+            {
+                secret: 'ssssh'
+            }
+        },
+        client:
+        [
+            {
+                url: 'http://127.0.0.1:33333'
+            },
+            {
+                url: 'ws://127.0.0.1:33334'
+            }
+        ]
     }
-}
+];
 
-class Instance
+const server = new Jayson.Server(config[0].server);
+const client =
+[
+    new Jayson.Client(config[0].client[0]),
+    new Jayson.Client(config[0].client[1])
+];
+const tests = [];
+
+tests.push(() =>
 {
-    foo()
+    return new Promise((resolve, reject) =>
     {
-        return 'bar';
-    }
-}
+        test('Client should connect to the server (HTTP).', async (t) =>
+        {
+            try
+            {
+                await client[0].connect();
+                t.pass('Client connected to server.');
+            }    
 
-const config1 =
+            catch(error)
+            {
+                t.fail('Client failed to connect to server.');
+            }
+
+            t.end();
+            return resolve(true);
+        }); 
+    });
+});
+
+tests.push(() =>
 {
-    instance: singleton,
-    logger: true,
-    wsOptions:
+    return new Promise((resolve, reject) =>
     {
-        port: 33332
-    }
-}
+        test('Client should connect to the server (HTTP).', async (t) =>
+        {
+            try
+            {
+                await client[0].connect();
+                t.pass('Client connected to server.');
+            }    
 
-const config2 =
+            catch(error)
+            {
+                t.fail('Client failed to connect to server.');
+            }
+
+            t.end();
+            return resolve(true);
+        }); 
+    });
+});
+
+tests.push(() =>
 {
-    instance: new Instance(),
-    logger: true,
-    wsOptions:
+    return new Promise((resolve, reject) =>
     {
-        port: 33333
-    }
-}
+        test('Server (HTTP) should return a method schema.', async (t) =>
+        {
+            try
+            {
+                const schema = await client[0].discover();
+                t.equal('object', typeof schema, 'schema is an object.');
+                t.equal(config[0].server.title, schema.title, `title property is equal to "${config[0].server.title}"`);
+                t.equal(config[0].server.description, schema.description, `description property is equal to "${config[0].server.description}"`);
+                t.equal(config[0].server.$id, schema.$id, `$id property is equal to "${config[0].server.$id}"`);
+                t.deepLooseEqual(config[0].server.definitions, schema.definitions, 'defintions property is equal to server config definitions.');
+            }    
 
-// const rpc1 = new Respect(config1);
-// const rpc2 = new Respect(config2);
-// const ws1 = new WebSocket(`ws://127.0.0.1:${config1.wsOptions.port}`);
-// const ws2 = new WebSocket(`ws://127.0.0.1:${config2.wsOptions.port}`);
+            catch(error)
+            {
+                t.fail('Request failed.');
+            }
 
-// ws1.on('open', () =>
+            t.end();
+            return resolve(true);
+        }); 
+    });
+});
+
+// tests.push(() =>
 // {
-//     test('should return parse error with invalid JSON', (t) =>
+//     return new Promise((resolve, reject) =>
 //     {
-//         ws1.once('message', (message) =>
+//         test('Server (WS) should return a method schema.', async (t) =>
 //         {
-//             const json = JSON.parse(message);
-//             t.equal(rpc1.status.PARSE_ERROR, _.get(json, 'error.code'));    
-//             t.end();
-//         });
-
-//         ws1.send('Non JSON'); 
-//     });
-
-//     test('should return invalid request with incorrect jsonrpc version', (t) =>
-//     {
-//         ws1.once('message', (message) =>
-//         {
-//             const json = JSON.parse(message);
-//             t.equal(rpc1.status.INVALID_REQUEST, _.get(json, 'error.code'));
-//             t.end();
-//         });
-
-//         ws1.send(JSON.stringify(
-//         {
-//             jsonrpc: '1.1',
-//             method: 'foo',
-//             params: [1,2,3],
-//             id: 1
-//         }));
-//     });
-
-//     test('should return invalid request with missing method', (t) =>
-//     {
-//         ws1.once('message', (message) =>
-//         {
-//             const json = JSON.parse(message);
-//             t.equal(rpc1.status.INVALID_REQUEST, _.get(json, 'error.code'));
-//             t.end();
-//         });
-
-//         ws1.send(JSON.stringify(
-//         {
-//             jsonrpc: '2.0',
-//             params: [1,2,3],
-//             id: 1
-//         }));
-//     });
-
-//     test('should return invalid request with invalid method type', (t) =>
-//     {
-//         ws1.once('message', (message) =>
-//         {
-//             const json = JSON.parse(message);
-//             t.equal(rpc1.status.INVALID_REQUEST, _.get(json, 'error.code'));
-//             t.end();
-//         });
-
-//         ws1.send(JSON.stringify(
-//         {
-//             jsonrpc: '2.0',
-//             method: null,
-//             params: [1,2,3],
-//             id: 1
-//         }));
-//     });
-
-//     test('should return method not found when method is not a function', (t) =>
-//     {
-//         ws1.once('message', (message) =>
-//         {
-//             const json = JSON.parse(message);
-//             t.equal(rpc1.status.METHOD_NOT_FOUND, _.get(json, 'error.code'));
-//             t.end();
-//         });
-
-//         ws1.send(JSON.stringify(
-//         {
-//             jsonrpc: '2.0',
-//             method: 'baz',
-//             params: [1,2,3],
-//             id: 1
-//         }));
-//     });
-
-//     test('should return invalid params if params does not match schema (request with no params)', (t) =>
-//     {
-//         ws1.once('message', (message) =>
-//         {
-//             const json = JSON.parse(message);
-//             t.equal(rpc1.status.INVALID_PARAMS, _.get(json, 'error.code'));
-//             t.end();
-//         });
-
-//         ws1.send(JSON.stringify(
-//         {
-//             jsonrpc: '2.0',
-//             method: 'bar',
-//             id: 1
-//         }));
-//     });
-
-//     test('should return result for valid request (no params)', (t) =>
-//     {
-//         ws1.once('message', (message) =>
-//         {
-//             const json = JSON.parse(message);
-//             t.notEqual(json.result, undefined);
-//             t.end();
-//         });
-
-//         ws1.send(JSON.stringify(
-//         {
-//             jsonrpc: '2.0',
-//             method: 'foo',
-//             id: 1
-//         }));
-//     });
-
-//     test('should return internal error for a method (no params) that returns an invalid type (Date)', (t) =>
-//     {
-//         ws1.once('message', (message) =>
-//         {
-//             const json = JSON.parse(message);
-//             t.equal(rpc1.status.INTERNAL_ERROR, _.get(json, 'error.code'));
-//             t.end();
-//         });
-
-//         ws1.send(JSON.stringify(
-//         {
-//             jsonrpc: '2.0',
-//             method: 'qux',
-//             id: 1
-//         }));
-//     });
-
-//     test('should return internal error for a method (no params) that returns an invalid type (Function)', (t) =>
-//     {
-//         ws1.once('message', (message) =>
-//         {
-//             const json = JSON.parse(message);
-//             t.equal(rpc1.status.INTERNAL_ERROR, _.get(json, 'error.code'));
-//             t.end();
-//         });
-
-//         ws1.send(JSON.stringify(
-//         {
-//             jsonrpc: '2.0',
-//             method: 'quux',
-//             id: 1
-//         }));
-//     });
-
-//     test('should return a value for a method (no params) that returns a resolvable Promise', (t) =>
-//     {
-//         ws1.once('message', (message) =>
-//         {
-//             const json = JSON.parse(message);
-//             t.notEqual(json.result, undefined);
-//             t.end();
-//         });
-
-//         ws1.send(JSON.stringify(
-//         {
-//             jsonrpc: '2.0',
-//             method: 'quuz',
-//             id: 1
-//         }));
-//     });
-
-//     test('should return internal error for a method (no params) that returns a rejectable Promise', (t) =>
-//     {
-//         ws1.once('message', (message) =>
-//         {
-//             const json = JSON.parse(message);
-//             t.equal(rpc1.status.INTERNAL_ERROR, _.get(json, 'error.code'));
-//             t.end();
-//         });
-
-//         ws1.send(JSON.stringify(
-//         {
-//             jsonrpc: '2.0',
-//             method: 'wibble.wobble.wubble.flob',
-//             id: 1
-//         }));
-//     });
-
-//     test('should return invalid params if params does not match schema (request with object params)', (t) =>
-//     {
-//         ws1.once('message', (message) =>
-//         {
-//             const json = JSON.parse(message);
-//             t.equal(rpc1.status.INVALID_PARAMS, _.get(json, 'error.code'));
-//             t.end();
-//         });
-
-//         ws1.send(JSON.stringify(
-//         {
-//             jsonrpc: '2.0',
-//             method: 'bar',
-//             params:
+//             try
 //             {
-//                 a: 1,
-//                 b: 2
-//             },
-//             id: 1
-//         }));
-//     });
+//                 const schema = await client[1].discover();
+//                 console.log(schema)
+//                 t.equal('object', typeof schema, 'schema is an object.');
+//                 t.equal(config[0].server.title, schema.title, `title property is equal to "${config[0].server.title}"`);
+//                 t.equal(config[0].server.description, schema.description, `description property is equal to "${config[0].server.description}"`);
+//                 t.equal(config[0].server.$id, schema.$id, `$id property is equal to "${config[0].server.$id}"`);
+//                 t.deepLooseEqual(config[0].server.definitions, schema.definitions, 'defintions property is equal to server config definitions.');
+//             }    
 
-//     test('should return a value if params matches schema (request with object params)', (t) =>
-//     {
-//         ws1.once('message', (message) =>
-//         {
-//             const json = JSON.parse(message);
-//             t.notEqual(json.result, undefined);
-//             t.end();
-//         });
-
-//         ws1.send(JSON.stringify(
-//         {
-//             jsonrpc: '2.0',
-//             method: 'bar',
-//             params:
+//             catch(error)
 //             {
-//                 a: 1,
-//                 b: 2,
-//                 c: 3
-//             },
-//             id: 1
-//         }));
-//     });
+//                 t.fail('Request failed.');
+//             }
 
-//     test('should return a value if no schema is provided (request with object params)', (t) =>
-//     {
-//         ws1.once('message', (message) =>
-//         {
-//             const json = JSON.parse(message);
-//             t.notEqual(json.result, undefined);
 //             t.end();
-//         });
-
-//         ws1.send(JSON.stringify(
-//         {
-//             jsonrpc: '2.0',
-//             method: 'corge',
-//             params:
-//             {
-//                 a: 'world'
-//             },
-//             id: 1
-//         }));
-//     });
-
-//     test('should return internal error for a method (with object params) that returns an invalid type (Date)', (t) =>
-//     {
-//         ws1.once('message', (message) =>
-//         {
-//             const json = JSON.parse(message);
-//             t.equal(rpc1.status.INTERNAL_ERROR, _.get(json, 'error.code'));
-//             t.end();
-//         });
-
-//         ws1.send(JSON.stringify(
-//         {
-//             jsonrpc: '2.0',
-//             method: 'qux',
-//             params:
-//             {
-//                 a: 1
-//             },
-//             id: 1
-//         }));
-//     });
-
-//     test('should return internal error for a method (with object params) that returns an invalid type (Function)', (t) =>
-//     {
-//         ws1.once('message', (message) =>
-//         {
-//             const json = JSON.parse(message);
-//             t.equal(rpc1.status.INTERNAL_ERROR, _.get(json, 'error.code'));
-//             t.end();
-//         });
-
-//         ws1.send(JSON.stringify(
-//         {
-//             jsonrpc: '2.0',
-//             method: 'quux',
-//             params:
-//             {
-//                 b: ''
-//             },
-//             id: 1
-//         }));
-//     });
-
-//     test('should return a value for a method (with object params) that returns a resolvable Promise', (t) =>
-//     {
-//         ws1.once('message', (message) =>
-//         {
-//             const json = JSON.parse(message);
-//             t.notEqual(json.result, undefined);
-//             t.end();
-//         });
-
-//         ws1.send(JSON.stringify(
-//         {
-//             jsonrpc: '2.0',
-//             method: 'quuz',
-//             params:
-//             {
-//                 c: true
-//             },
-//             id: 1
-//         }));
-//     });
-
-//     test('should return internal error for a method (with object params) that returns a rejectable Promise', (t) =>
-//     {
-//         ws1.once('message', (message) =>
-//         {
-//             const json = JSON.parse(message);
-//             t.equal(rpc1.status.INTERNAL_ERROR, _.get(json, 'error.code'));
-//             t.end();
-//         });
-
-//         ws1.send(JSON.stringify(
-//         {
-//             jsonrpc: '2.0',
-//             method: 'wibble.wobble.wubble.flob',
-//             params:
-//             {
-//                 d: [1, 2, 3, 4]
-//             },
-//             id: 1
-//         }));
-//     });
-
-//     test('should return a value for a valid request (request with array params)', (t) =>
-//     {
-//         ws1.once('message', (message) =>
-//         {
-//             const json = JSON.parse(message);
-//             t.notEqual(json.result, undefined);
-//             t.end();
-//         });
-
-//         ws1.send(JSON.stringify(
-//         {
-//             jsonrpc: '2.0',
-//             method: 'wibble.wobble.wubble.flub',
-//             params: ['wibble', 'wobble', 'wubble'],
-//             id: 1
-//         }));
-//     });
-
-//     test('should return internal error for a method (with array params) that returns an invalid type (Date)', (t) =>
-//     {
-//         ws1.once('message', (message) =>
-//         {
-//             const json = JSON.parse(message);
-//             t.equal(rpc1.status.INTERNAL_ERROR, _.get(json, 'error.code'));
-//             t.end();
-//         });
-
-//         ws1.send(JSON.stringify(
-//         {
-//             jsonrpc: '2.0',
-//             method: 'wibble.wobble.wubble.flib',
-//             params: ['a'],
-//             id: 1
-//         }));
-//     });
-
-//     test('should return invalid params if params does not match method signature (request with array params)', (t) =>
-//     {
-//         ws1.once('message', (message) =>
-//         {
-//             const json = JSON.parse(message);
-//             t.equal(rpc1.status.INVALID_PARAMS, _.get(json, 'error.code'));
-//             t.end();
-//         });
-
-//         ws1.send(JSON.stringify(
-//         {
-//             jsonrpc: '2.0',
-//             method: 'quux',
-//             params: [true, false],
-//             id: 1
-//         }));
+//             return resolve(true);
+//         }); 
 //     });
 // });
 
-// ws2.on('open', () =>
-// {
-//     test('should return result for valid request (no params)', (t) =>
-//     {
-//         ws2.once('message', (message) =>
-//         {
-//             const json = JSON.parse(message);
-//             t.notEqual(json.result, undefined);
-//             t.end();
-//             process.exit();
-//         });
+const main = async () =>
+{
+    for(const t of tests)
+    {
+        await t();
+    }
 
-//         ws2.send(JSON.stringify(
-//         {
-//             jsonrpc: '2.0',
-//             method: 'foo',
-//             id: 1
-//         }));
-//     });
-// });
+    process.exit();
+}
+
+main();
