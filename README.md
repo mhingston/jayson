@@ -207,9 +207,9 @@ Connect to the RPC server.
 #### client.discover() [async]
 Retrieve the RPC methods schema from the RPC server. This is necessary to validate future RPC calls. If you don't call this method then schema validation will be disabled.
 
-* `callback(error, client)` {Function} Callback function.
+* `callback(error, result)` {Function} Callback function.
   * `error` {Object|Null} Error object.
-  * `result` {String|Number|Boolean|Null|Undefined|Array|Object} Result from the RPC call.
+  * `result` {Object} Method schema.
 
 #### client.call(args) [async]
 
