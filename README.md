@@ -209,7 +209,7 @@ Retrieve the RPC methods schema from the RPC server. This is necessary to valida
 
 * `callback(error, client)` {Function} Callback function.
   * `error` {Object|Null} Error object.
-  * `client` {Object} The client instance.
+  * `result` {String|Number|Boolean|Null|Undefined|Array|Object} Result from the RPC call.
 
 #### client.call(args) [async]
 

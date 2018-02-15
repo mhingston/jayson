@@ -242,12 +242,14 @@ class Client
         });
     }
 
-    discover()
+    async discover()
     {
-        return this.call(
+        const response = await this.call(
         {
             discover: true
         });
+
+        return response.result;
     }
 
     call(args)
