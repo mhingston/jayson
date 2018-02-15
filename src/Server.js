@@ -244,7 +244,7 @@ class Server
                 throw new Error(`Method: ${json.method} returned an invalid value. Expected [String|Number|Boolean|Null|Undefined|Array|Object].`);
             }
 
-            else if(_.get(schema, 'properties.returns') && !ajv.validate(schema, {returns: result}))
+            else if(_.get(schema, 'properties.returns') && (result === undefined || !ajv.validate(schema, {returns: result})))
             {
                 throw new Error(`Method: ${json.method} returned an invalid value.`);
             }
@@ -389,7 +389,7 @@ class Server
                 }
             }
 
-            if(!ajv.validate(schema, {params: json.params}))
+            if((method.schema.params && json.params === undefined) || !ajv.validate(schema, {params: json.params}))
             {
                 this.logger.log('error', `${headers['x-forwarded-for']} - - [${format(new Date(), 'DD/MMM/YYYY HH:mm:ss ZZ')}] Invalid params`);
             
@@ -409,7 +409,7 @@ class Server
             }
         }
 
-        if(!json.params)
+        if(json.params === undefined)
         {
             return new Promise(async (resolve, reject) =>
             {
