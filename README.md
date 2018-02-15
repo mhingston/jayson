@@ -59,7 +59,7 @@ Remote methods may have attached to them the following properties:
     }
     ```
 
-    If you need to reference schema definitions you should pass in your `definitions` schema to the server config. [Example](https://github.com/mhingston/jayson/blob/master/examples/definitions-schema).
+    If you need to reference schema definitions you should pass in your `definitions` schema to the server config. [Example](https://github.com/mhingston/jayson/blob/master/examples/schema-definitions).
 
 * `timeout` {Number} How long to wait (in milliseconds) before timing out the request. If not provided then the `timeout` value will be used from the server config.
 
