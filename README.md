@@ -265,3 +265,8 @@ Now you can run:
 e.g.
 
 `npm run docson -- --server http://127.0.0.1:3000 --output index.html`
+
+## Notes
+
+* Jayson supports calling async methods, i.e. functions returning a promise.
+* Rate limiting requests is not supported and is beyond the scope of this project. It's better handled by a reverse proxy and/or firewall.
