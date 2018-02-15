@@ -101,7 +101,7 @@ class Method
 const methods = new Method();
 ```
 
-**Note: The Jayson server passes a `context` object argument to every method that's called. If the `params` property of a `request` is an Object then the property `context` will be added to that object. If the `params` property is any other type then the first argument passed to the method will be the `context` object.**
+**Note: The Jayson server passes a `context` object argument to every method that's called. If the `params` property of a `request` is an object then the property `context` will be added to that object. If the `params` property is any other type then the first argument passed to the method will be the `context` object.**
 
 `context` {Object} Method context.
 * `headers` {Object} Request headers.

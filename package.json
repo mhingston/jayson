@@ -5,6 +5,7 @@
   "main": "src/index.js",
   "browser": "dist/jayson.min.js",
   "scripts": {
+    "docson": "node bin/docson.js",
     "test": "tape ./test/*.js",
     "coverage": "nyc tape test/index.js | tap-spec",
     "webpack": "webpack"
