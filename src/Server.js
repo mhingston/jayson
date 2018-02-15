@@ -188,12 +188,7 @@ class Server
 
                     if(namespace[key].timeout)
                     {
-                        root.properties[key].properties.timeout =
-                        {
-                            type: 'number',
-                            minimum: namespace[key].timeout,
-                            maximum: namespace[key].timeout
-                        }
+                        root.properties[key].properties.timeout = namespace[key].timeout;
                     }
 
                     const ajv = new Ajv();
@@ -355,7 +350,12 @@ class Server
 
             if(method.timeout)
             {
-                schema.properties.timeout = method.timeout;
+                schema.properties.timeout =
+                {
+                    type: 'number',
+                    minimum: method.timeout,
+                    maximum: method.timeout
+                }
             }
 
             if(schema.requires)
