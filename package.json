@@ -9,16 +9,21 @@
     "coverage": "nyc tape test/index.js | tap-spec",
     "webpack": "webpack"
   },
+  "bin": {
+    "docson": "./bin/docson.js"
+  },
   "keywords": [],
   "author": "Mark Hingston <git@mail.bitshift.cc>",
   "license": "MIT",
   "dependencies": {
     "ajv": "^6.1.1",
     "bytes": "^3.0.0",
+    "commander": "^2.14.1",
     "date-fns": "^1.29.0",
     "fetch-ponyfill": "^5.0.0",
     "fn-args": "^3.0.0",
     "http-status-codes": "^1.3.0",
+    "jquery": "^3.3.1",
     "jsonwebtoken": "^8.1.1",
     "koa": "^2.4.1",
     "koa-bodyparser": "^4.2.0",
@@ -27,6 +32,7 @@
     "koa-router": "^7.4.0",
     "koa2-cors": "^2.0.5",
     "lodash": "^4.17.5",
+    "node-docson": "^0.4.6",
     "ws": "^4.0.0"
   },
   "devDependencies": {
