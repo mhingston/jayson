@@ -345,7 +345,7 @@ class Server
 
             if(this.config.definitions)
             {
-                schema.definitions = this.config.definitions
+                schema.definitions = this.config.definitions;
             }
 
             for(const key in method.schema)
