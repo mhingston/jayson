@@ -112,7 +112,7 @@ class Client
                 }
             };
 
-            if(!/wss?:\/\//.test(this.config.url) || (this.ws && this.ws.readyState === this.readyState.OPEN))
+            if(!/^wss?:\/\//.test(this.config.url) || (this.ws && this.ws.readyState === this.readyState.OPEN))
             {
                 resolved = true;
                 callback();
@@ -279,7 +279,7 @@ class Client
                     }
                 }
 
-                if(/https?:\/\//.test(this.config.url))
+                if(/^https?:\/\//.test(this.config.url))
                 {
                     if(!call.notification)
                     {
