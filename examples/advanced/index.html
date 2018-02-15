@@ -1277,7 +1277,13 @@ function sourceButton(element) {
             <div class="signature-header">
                 <div class="property-name ">timeout</div>
                 <div class="signature-type">
-                        
+                                   <span class="signature-type-number">
+               number
+            </span>
+            <span class="type-keyword">
+               [1000]
+            </span>
+
                 </div>
                 <div class="signature-description desc"></div>
             </div>
@@ -1302,7 +1308,11 @@ function sourceButton(element) {
     "returns": {
       "type": "number"
     },
-    "timeout": 1000
+    "timeout": {
+      "type": "number",
+      "minimum": 1000,
+      "maximum": 1000
+    }
   }
 }</pre>
     </div>
@@ -1993,7 +2003,11 @@ function sourceButton(element) {
         "returns": {
           "type": "number"
         },
-        "timeout": 1000
+        "timeout": {
+          "type": "number",
+          "minimum": 1000,
+          "maximum": 1000
+        }
       }
     },
     "returnsBoolean": {
@@ -2118,7 +2132,11 @@ function sourceButton(element) {
           "returns": {
             "type": "number"
           },
-          "timeout": 1000
+          "timeout": {
+            "type": "number",
+            "minimum": 1000,
+            "maximum": 1000
+          }
         }
       },
       "returnsBoolean": {
@@ -2245,7 +2263,11 @@ function sourceButton(element) {
           "returns": {
             "type": "number"
           },
-          "timeout": 1000
+          "timeout": {
+            "type": "number",
+            "minimum": 1000,
+            "maximum": 1000
+          }
         }
       },
       "returnsBoolean": {

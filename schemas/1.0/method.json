@@ -37,7 +37,18 @@
                     "type": "object"
                 },
                 "timeout": {
-                    "type": "number"
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "type": "string"
+                        },
+                        "minimum": {
+                            "type": "number"
+                        },
+                        "maximum": {
+                            "type": "number"
+                        }
+                    }
                 }
             },
             "additionalProperties": false
