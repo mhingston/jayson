@@ -242,13 +242,15 @@ class Client
         });
     }
 
-    async discover()
+    async discover(callback)
     {
+        callback = typeof callback === 'function' ? callback : () => {};
         const response = await this.call(
         {
             discover: true
         });
 
+        callback(response.error, response.result);
         return response.result;
     }
 
@@ -269,13 +271,14 @@ class Client
         {
             return new Promise(async (resolve, reject) =>
             {
+                call.callback = typeof call.callback === 'function' ? call.callback : () => {};
                 const body = {};
                 body.jayson = this.VERSION;
                 body.params = body.params || [];
                 
                 for(const key in call)
                 {
-                    if(key !== 'notification')
+                    if(['notification', 'callback'].indexOf(key) === -1)
                     {
                         body[key] = call[key];
                     }
@@ -301,6 +304,7 @@ class Client
                     try
                     {
                         const json = await response.json();
+                        call.callback(json.error, json.result);
                         return resolve(json);
                     }
 
@@ -318,29 +322,26 @@ class Client
                         {
                             callback: (response) =>
                             {
-                                if(typeof call.callback === 'function')
+                                if(response.error)
                                 {
-                                    if(response.error)
+                                    const error = new Error(response.error.message);
+
+                                    for(const key in response.error)
                                     {
-                                        const error = new Error(response.error.message);
-
-                                        for(const key in response.error)
-                                        {
-                                            error[key] = response.error[key];
-                                        }
-
-                                        call.callback(error);
+                                        error[key] = response.error[key];
                                     }
 
-                                    else if(response.result)
-                                    {
-                                        call.callback(null, response.result);
-                                    }
+                                    call.callback(error);
+                                }
 
-                                    else
-                                    {
-                                        call.callback();
-                                    }
+                                else if(response.result)
+                                {
+                                    call.callback(null, response.result);
+                                }
+
+                                else
+                                {
+                                    call.callback();
                                 }
     
                                 return resolve(response);
