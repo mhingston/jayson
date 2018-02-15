@@ -273,23 +273,6 @@ class Server
                 id
             };
         }
-
-        const createTimer = (timeout) =>
-        {
-            return setTimeout(() =>
-            {
-                return resolve(
-                {
-                    jayson: this.VERSION,
-                    error:
-                    {
-                        code: this.errors.TIMEOUT,
-                        message: `Request failed to complete in ${timeout}ms.`,
-                    },
-                    id
-                }); 
-            }, timeout)
-        }
         
         if(json.jayson !== this.VERSION)
         {
@@ -430,7 +413,19 @@ class Server
 
                 if(timeout)
                 {
-                    timerID = createTimer(timeout);
+                    timerID = setTimeout(() =>
+                    {
+                        return resolve(
+                        {
+                            jayson: this.VERSION,
+                            error:
+                            {
+                                code: this.errors.TIMEOUT,
+                                message: `Request failed to complete in ${timeout}ms.`,
+                            },
+                            id
+                        }); 
+                    }, timeout);
                 }
 
                 try
@@ -470,7 +465,19 @@ class Server
 
                 if(timeout)
                 {
-                    timerID = createTimer(timeout);
+                    timerID = setTimeout(() =>
+                    {
+                        return resolve(
+                        {
+                            jayson: this.VERSION,
+                            error:
+                            {
+                                code: this.errors.TIMEOUT,
+                                message: `Request failed to complete in ${timeout}ms.`,
+                            },
+                            id
+                        }); 
+                    }, timeout);
                 }
 
                 try
@@ -534,7 +541,19 @@ class Server
 
                 if(timeout)
                 {
-                    timerID = createTimer(timeout);
+                    timerID = setTimeout(() =>
+                    {
+                        return resolve(
+                        {
+                            jayson: this.VERSION,
+                            error:
+                            {
+                                code: this.errors.TIMEOUT,
+                                message: `Request failed to complete in ${timeout}ms.`,
+                            },
+                            id
+                        }); 
+                    }, timeout);
                 }
 
                 try
