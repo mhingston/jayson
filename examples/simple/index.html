@@ -1,0 +1,798 @@
+<html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"><style>
+/*
+ * Copyright 2013 Laurent Bovet <laurent.bovet@windmaster.ch>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.docson {
+    font-family: 'Droid Sans',verdana,helvetica;
+    font-size: 13px;
+    padding: 6px 6px 6px 6px;
+}
+
+.docson .box {
+    position: relative;
+    float: left;
+    width:100%;
+    background-color:rgba(255, 255, 255, 0.2);
+    border: 1px solid lightgrey;
+    border-radius: 4px;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+    padding-bottom: 10px;
+    margin: 0;
+    -moz-box-shadow:    1px 1px 1px darkgray;
+    -webkit-box-shadow: 1px 1px 1px darkgray;
+    box-shadow:         1px 1px 1px darkgray;
+}
+
+.docson .box.box-selected {
+    background: rgb(255,255,232);
+    border: 2px solid #777;
+}
+
+.docson .container {
+    width: 100%;
+}
+
+.docson .expand-button {
+    position: absolute;
+    margin-top: 15px;
+    padding: 2px;
+    right: 2px;
+    float: right;
+    width: 18px;
+    text-align: center;
+    cursor: pointer;
+    font-weight: bold;
+    font-family: "Lucida Console", Monaco, monospace;
+    font-size: 15px;
+    color: darkgray;
+    display: none;
+}
+
+.docson .source-button {
+    position: absolute;
+    padding: 2px;
+    margin-top: 3px;
+    right: 2px;
+    width: 18px;
+    text-align: center;
+    cursor: pointer;
+    font-weight: bold;
+    font-family: "Lucida Console", Monaco, monospace;
+    font-size: 10px;
+    color: darkgray;
+    display: none;
+}
+
+.docson .box-header {
+    padding: 6px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-bottom: 1px solid lightgrey;
+    background: whitesmoke;
+   /* background: -webkit-linear-gradient(ghostwhite, whitesmoke, whitesmoke, gainsboro);
+    background: -moz-linear-gradient(ghostwhite, whitesmoke, whitesmoke, gainsboro);*/
+}
+
+.docson .box-name {
+    color: darkblue;
+    padding: 5px 40px 2px 3px;
+    float: left;
+    width:100%;
+}
+
+.docson .title {
+    margin-top: -3px;
+    font-size: 120%;
+}
+
+.docson .link {
+    text-decoration: underline;
+}
+
+.docson .box-description {
+    color: dimgray;
+    float: left;
+    width:100%;
+}
+
+.docson .end {
+    clear: both;
+}
+
+.docson .error {
+    color: red;
+}
+
+.docson .box-body {
+    padding-left: 10px;
+    padding-right: 28px;
+    clear: both;
+}
+
+.docson .box-1, .docson .box-2, .docson .box-3, .docson .box-4, .docson .box-5, .docson .box-6, .docson .box-7, .docson .box-8 {
+    background: whitesmoke;
+}
+
+.docson .signature {
+    padding-top: 5px;
+    clear: left;
+}
+
+.docson .signature-header {
+    padding-top: 3px;
+    height: 20px;
+    line-height: 24px;
+}
+
+.docson .property-name {
+    float: left;
+    font-family: "Lucida Console", Monaco, monospace;
+    min-width: 130px;
+    position: relative;
+    padding-right: 40px;
+}
+
+.docson .property-name:after {
+    content: 'opt';
+    display: none;
+    text-decoration: none;
+    font-size: 10px;
+    position: absolute;
+    right: 0;
+    top: 1px;
+    background: azure;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 0 4px;
+    color: #777;
+}
+
+.docson .required {
+    font-weight: bold;
+    font-style: italic;
+    text-decoration: underline;
+}
+
+.docson .required:after {
+    content: 'req';
+    display: block;
+    background: bisque;
+    color: #111;
+}
+
+.docson .type-keyword {
+    font-size: 80%;
+    color: dimgray;
+    margin-right: 8px;
+}
+
+.docson .type-pattern {
+    font-size: 80%;
+    color: darkolivegreen;
+}
+
+.docson .type-enum {
+    color: purple;
+    font-family: "Lucida Console", Monaco, monospace;
+    font-size: 90%;
+    padding-left: 2px;
+}
+
+.docson .type-default {
+    color: darkslategrey;
+    font-family: "Lucida Console", Monaco, monospace;
+}
+
+.docson .signature-type {
+    padding-left: 6px;
+    float: left;
+    min-width: 160px;
+    line-height: 220%;
+}
+
+.docson .signature-type-any {
+    font-style: italic;
+}
+
+.docson .signature-type-string {
+    color: green;
+}
+
+.docson .signature-type-number {
+    color: blue;
+}
+
+.docson .signature-type-integer {
+    color: blueviolet;
+}
+
+.docson .signature-type-boolean {
+    color: orangered;
+}
+
+.docson .signature-type-null {
+    font-family: "Lucida Console", Monaco, monospace;
+    color: red;
+}
+
+.docson .signature-type-date-time {
+    color: #224466;
+}
+
+.docson .signature-type-email {
+    color: cornflowerblue;
+}
+
+.docson .signature-type-hostname {
+    color: darkolivegreen;
+}
+
+.docson .signature-type-ipv6 {
+    color: darkslateblue;
+}
+
+.docson .signature-type-ipv4 {
+    color: indigo;
+}
+
+.docson .signature-type-uri {
+    color: saddlebrown;
+}
+
+.docson .signature-button {
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    border: 1px solid lightgrey;
+    -moz-border-radius: 4px;
+}
+
+.docson .signature-type-ref {
+    color: darkblue;
+}
+
+.docson .signature-type-expanded {
+    padding: 5px 3px 3px 5px;
+    vertical-align: -1px;
+    opacity: 0.6;
+    -moz-box-shadow:    inset 1px 1px 1px darkgray;
+    -webkit-box-shadow: inset 1px 1px 1px darkgray;
+    box-shadow:         inset 1px 1px 1px darkgray;
+}
+
+.docson .signature-description {
+    padding-left: 6px;
+    padding-bottom: 3px;
+    color: dimgray;
+    float: left;
+    width:100%;
+}
+
+.docson .signature-box-container {
+    clear: both;
+}
+
+.docson .signature-button.signature-pill {
+    cursor: default;
+    color: #999;
+    background: azure;
+}
+
+.docson .box-container {
+    float: left;
+    width:100%;
+    padding-top: 4px;
+    padding-left: 8px;
+    display: none;
+    clear: both;
+}
+
+.docson .button {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.docson .button:hover {
+    color: darkred;
+}
+
+@media all and (min-width: 20px) and (max-width: 500px) {
+    .docson .property-name {
+        min-width: 0px;
+    }
+    .docson .signature-type {
+        min-width: 0px;
+    }
+    .docson .source {
+        width: 100%;
+    }
+    .docson .box-container, .box {
+        width: 100%;
+    }
+}
+
+.docson .desc {
+    padding-left: 6px;
+    line-height: 17px;
+    clear: both;
+}
+
+.docson .desc p {
+    margin: 0;
+    margin-top: 3px;
+}
+
+.docson .desc code {
+    color: purple;
+    font-size: 90%;
+}
+
+
+.docson .desc table {
+    margin-top: 4px;
+    margin-bottom: 4px;
+    border-collapse:collapse;
+}
+
+.docson .desc th {
+    padding: 0px;
+    font-size: 80%;
+    font-weight: normal;
+    background: rgba(231, 231, 231, 0.5);
+}
+
+.docson .desc table,
+.docson .desc th,
+.docson .desc td {
+    border: 1px solid lightgrey;
+}
+
+.docson .desc tr > td {
+    padding: 2px 6px 2px 6px;
+}
+
+.docson .desc h1 {
+    font-size: 120%;
+    margin-top: 0px;
+    margin-bottom: 3px;
+}
+
+.docson .desc h2 {
+    font-size: 115%;
+    margin-top: 0px;
+    margin-bottom: 3px;
+}
+
+.docson .desc h3 {
+    font-size: 110%;
+    margin-top: 0px;
+    margin-bottom: 3px;
+}
+
+.docson .desc h4 {
+    font-size: 100%;
+    margin-top: 0px;
+    margin-bottom: 3px;
+}
+
+.docson .desc pre {
+    border: 1px solid lightgray;
+    border-radius: 4px;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    padding: 4px;
+    margin: 3px 0px;
+}
+
+.docson .desc ul {
+    padding-left: 16px;
+    margin: 3px 0px;
+}
+
+.docson .desc ol {
+    padding-left: 16px;
+    margin: 3px 0px;
+}
+
+.docson .desc blockquote {
+    margin: 3px 0px 3px 10px;
+    padding-left: 6px;
+    border-left: 1px solid lightgray;
+}
+
+.docson .desc img {
+    vertical-align: middle;
+}
+
+.docson .desc hr {
+    border: 0;
+    height: 1px;
+    background: lightgrey;
+    color: lightgrey;
+    width: 50%;
+}
+
+.docson .source {
+    display: none;
+    padding-left: 16px;
+    padding-right: 30px;
+}
+
+.docson .json, .json-schema {
+    font-family: "Lucida Console", Monaco, monospace;
+}
+
+.docson .json-punctuation {
+    font-weight: bold;
+}
+
+.docson .json-null, .json-true, .json-false {
+    font-weight: bold;
+}
+
+.docson .json-true {
+    color: #080;
+}
+
+.docson .json-false {
+    color: #800;
+}
+
+.docson .json-object-key {
+    color: #246;
+}
+
+.docson .json-keyword {
+    font-weight: bold;
+    color: #036;
+}
+
+.docson .json-number {
+    font-weight: bold;
+    color: #660;
+}
+
+.docson .json-string {
+    color: #800;
+}
+
+.docson .json-schema-map > .json-object-key {
+    color: #080;
+    font-style: italic;
+}
+</style><script type="text/javascript">
+function getByClass(element, className, callback) {
+    var elements = element.getElementsByClassName(className);
+    for (var e = 0; e < elements.length; ++e) {
+        callback(elements[e]);
+    }
+}
+
+function deSelect() {
+    getByClass(document, 'box-selected', function (selected) {
+        if (selected) {
+            selected.className = selected.className.replace(' box-selected', '');
+        }
+    });
+}
+
+function displayButtons(element, display) {
+    element.getElementsByClassName('source-button')[0].style.display = display;
+    element.getElementsByClassName('expand-button')[0].style.display = display;
+}
+
+function toggleClass(element, cssClass) {
+    if (element.className.indexOf(cssClass) > -1) {
+        element.className = element.className.replace(cssClass, "");
+    } else {
+        element.className += " " + cssClass;
+    }
+}
+
+function toggleDisplay(element) {
+    var display = element.currentStyle ? element.currentStyle.display : getComputedStyle(element, null).display;
+    if (display == '' || display == 'block') {
+        element.style.display = 'none';
+    } else {
+        element.style.display = 'block';
+    }
+}
+
+function expand(element) {
+    var boxId = element.getAttribute("boxid");
+    toggleClass(element, "signature-type-expanded");
+    var bc = element.parentElement.parentElement.parentElement.getElementsByClassName("signature-box-container")[0];
+    var boxes = bc.children;
+    for (var b = 0; b < boxes.length; ++b) {
+        if (boxes[b].getAttribute("boxid") == boxId) {
+            toggleDisplay(boxes[b]);
+            break;
+        }
+    }
+}
+
+function setDisplay(element, display) {
+    element.style.display = display;
+}
+
+function setClass(element, className, remove) {
+    if (!remove) {
+        if (element.className.indexOf(className) == -1) {
+            element.className += " " + className;
+        }
+    } else {
+        if (element.className.indexOf(className) > -1) {
+            element.className = element.className.replace(className, "");
+        }
+    }
+}
+
+function expandButton(element) {
+    var parent = element.parentElement.parentElement;
+    if(element.getAttribute("expanded")) {
+        getByClass(parent, "expand-button", function (eb) {
+            eb.innerHTML = " + ";
+            eb.setAttribute("title", "Expand all");
+        });
+        getByClass(parent, "signature-type-expandable", function (ste) {
+            setClass(ste, "signature-type-expanded", true);
+        });
+        getByClass(parent, "box-container", function (ste) {
+            setDisplay(ste, 'none');
+        });
+        element.removeAttribute("expanded");
+    } else {
+        getByClass(parent, "expand-button", function (eb) {
+            eb.innerHTML = " - ";
+            eb.setAttribute("title", "Collapse all");
+        });
+        getByClass(parent, "signature-type-expandable", function (ste) {
+            setClass(ste, "signature-type-expanded");
+        });
+        getByClass(parent, "box-container", function (ste) {
+            setDisplay(ste, 'block');
+        });
+        element.setAttribute("expanded", true);
+    }
+}
+
+function sourceButton(element) {
+    getByClass(element.parentElement, "box-body", function (bb) {
+        toggleDisplay(bb);
+    });
+    getByClass(element.parentElement, "source", function (source) {
+        toggleDisplay(source);
+    });
+}
+</script></head><body><div class="docson"> <div class="box" onmousedown="deSelect(); this.className += ' box-selected'; event.preventDefault(); return false;" onmouseenter="displayButtons(this, 'block');" onmouseleave="displayButtons(this, 'none');">
+    <div class="box-header box-">
+        <div class="box-title" ref="<root>">
+            <div class="box-name title">Jayson Server API</div>
+            <div class="box-description desc"></div>
+            <div class="end"></div>
+        </div>
+    </div>
+     <div class="source-button button" title="Source" onclick="sourceButton(this);">{}</div>
+    <div class="box-body">
+        <div class="expand-button button" title="Expand all" onclick="expandButton(this);">+</div>
+        <div>
+            
+        </div>
+        <div class="container resolved">
+        <div class="signature">
+            <div class="signature-header">
+                <div class="property-name ">hello</div>
+                <div class="signature-type">
+                                   <span class="signature-type-function">
+               function
+            </span>
+            <span class="type-keyword">
+               
+            </span>
+                <span boxid="1" class="box-1 signature-type-function signature-button signature-type-expandable button" onclick="expand(this);">function</span>
+
+                </div>
+                <div class="signature-description desc"></div>
+            </div>
+            <div class="signature-box-container">
+                <div class="box-container" boxid="1">
+                     <div class="box" onmousedown="deSelect(); this.className += ' box-selected'; event.preventDefault(); return false;" onmouseenter="displayButtons(this, 'block');" onmouseleave="displayButtons(this, 'none');">
+    <div class="box-header box-1">
+        <div class="box-title" ref="">
+            
+            <div class="box-description desc"></div>
+            <div class="end"></div>
+        </div>
+    </div>
+     <div class="source-button button" title="Source" onclick="sourceButton(this);">{}</div>
+    <div class="box-body">
+        <div class="expand-button button" title="Expand all" onclick="expandButton(this);">+</div>
+        <div class="signature">
+            <div class="signature-header">
+                <div class="signature-type">
+                                   <span class="signature-type-function">
+               function
+            </span>
+            <span class="type-keyword">
+               
+            </span>
+                <span boxid="1" class="box-1 signature-type-function signature-button signature-type-expandable button" onclick="expand(this);">function</span>
+
+                </div>
+            </div>
+            <div class="signature-box-container">
+                <div class="box-container" boxid="1">
+                     <div class="box" onmousedown="deSelect(); this.className += ' box-selected'; event.preventDefault(); return false;" onmouseenter="displayButtons(this, 'block');" onmouseleave="displayButtons(this, 'none');">
+    <div class="box-header box-">
+        <div class="box-title" ref="">
+            
+            <div class="box-description desc"><p><em>circular reference</em></p>
+</div>
+            <div class="end"></div>
+        </div>
+    </div>
+     <div class="source-button button" title="Source" onclick="sourceButton(this);">{}</div>
+    <div class="box-body">
+        <div class="expand-button button" title="Expand all" onclick="expandButton(this);">+</div>
+        <div>
+            
+        </div>
+        <div class="container ">
+
+
+</div>
+
+    </div>
+    <div class="source">
+        <pre class="json-schema">{
+  "description": "_circular reference_"
+}</pre>
+    </div>
+</div>
+<div class="end"></div>
+
+                </div>
+            </div>
+        </div>
+        <div>
+            
+        </div>
+        <div class="container ">
+        <div class="signature">
+            <div class="signature-header">
+                <div class="property-name ">params</div>
+                <div class="signature-type">
+                                   <span class="signature-type-string">
+               string
+            </span>
+            <span class="type-keyword">
+               
+            </span>
+
+                </div>
+                <div class="signature-description desc"></div>
+            </div>
+            <div class="signature-box-container">
+            </div>
+        </div>
+        <div class="signature">
+            <div class="signature-header">
+                <div class="property-name ">returns</div>
+                <div class="signature-type">
+                                   <span class="signature-type-string">
+               string
+            </span>
+            <span class="type-keyword">
+               
+            </span>
+
+                </div>
+                <div class="signature-description desc"></div>
+            </div>
+            <div class="signature-box-container">
+            </div>
+        </div>
+
+
+</div>
+
+    </div>
+    <div class="source">
+        <pre class="json-schema">{
+  "type": "function",
+  "properties": {
+    "params": {
+      "type": "string"
+    },
+    "returns": {
+      "type": "string"
+    }
+  }
+}</pre>
+    </div>
+</div>
+<div class="end"></div>
+
+                </div>
+            </div>
+        </div>
+
+
+</div>
+
+    </div>
+    <div class="source">
+        <pre class="json-schema">{
+  "$schema": "http://json-schema.org/schema#",
+  "title": "Jayson Server API",
+  "type": "object",
+  "properties": {
+    "hello": {
+      "type": "function",
+      "properties": {
+        "params": {
+          "type": "string"
+        },
+        "returns": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "__original": {
+    "properties": {
+      "hello": {
+        "type": "function",
+        "properties": {
+          "params": {
+            "type": "string"
+          },
+          "returns": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "required": [],
+  "__resolved": {
+    "properties": {
+      "hello": {
+        "type": "function",
+        "properties": {
+          "params": {
+            "type": "string"
+          },
+          "returns": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "required": [],
+    "__mini": true,
+    "id": "__mini-1"
+  }
+}</pre>
+    </div>
+</div>
+<div class="end"></div>
+</div></body></html>
