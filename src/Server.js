@@ -358,7 +358,7 @@ class Server
                 }
             }
 
-            if(schema.requires)
+            if(schema.properties.requires)
             {
                 try
                 {
