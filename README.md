@@ -245,3 +245,23 @@ client.connect()
 ```
 
 See the [examples](https://github.com/mhingston/jayson/blob/master/examples) folder for more.
+
+## Generating Documentation
+
+Once you have an API server up and running and have provided a schema for some/all of your methods you can generate a HTML file using [docson](https://github.com/TexKiller/node-docson).
+
+Add `docson` to your npm scripts:
+
+```jsons
+"scripts": {
+    "docson": "docson"
+  }
+```
+
+Now you can run:
+
+`npm run docson -- --server <Server URL> --output <Output File>`
+
+e.g.
+
+`npm run docson -- --server http://127.0.0.1:3000 --output index.html`
