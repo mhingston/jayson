@@ -304,6 +304,13 @@ class Client
                     try
                     {
                         const json = await response.json();
+
+                        if(call.notification)
+                        {
+                            call.callback();
+                            return resolve({jayson: this.VERSION});   
+                        }
+
                         call.callback(json.error, json.result);
                         return resolve(json);
                     }
@@ -351,6 +358,12 @@ class Client
                     }
 
                     this.ws.send(JSON.stringify(body));
+
+                    if(call.notification)
+                    {
+                        call.callback();
+                        return resolve();
+                    }
                 }
             });
         });
