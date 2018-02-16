@@ -19,8 +19,17 @@ const methods =
     {
         return new Promise((resolve, reject) =>
         {
-            setTimeout(() => resolve(true), 500);  
+            setTimeout(() => resolve(true), 500);
         })
+    },
+    quux: (context, a, b) =>
+    {
+        return a ** b;
+    },
+    corge: (context) => {},
+    wibble: (context) =>
+    {
+        throw new Error('Error');
     }
 };
 
@@ -39,6 +48,21 @@ methods.baz.schema =
     }
 };
 methods.qux.timeout = 100;
+methods.quux.schema =
+{
+    params:
+    {
+        type: 'array',
+        items:
+        {
+            type: 'number'
+        }
+    },
+    returns:
+    {
+        type: 'number'
+    }
+}
 
 const definitions =
 {
@@ -105,7 +129,7 @@ tests.push(() =>
             {
                 await client.http.connect();
                 t.pass('Client connected to server.');
-            }    
+            }
 
             catch(error)
             {
@@ -114,7 +138,7 @@ tests.push(() =>
 
             t.end();
             return resolve(true);
-        }); 
+        });
     });
 });
 
@@ -128,7 +152,7 @@ tests.push(() =>
             {
                 await client.ws.connect();
                 t.pass('Client connected to server.');
-            }    
+            }
 
             catch(error)
             {
@@ -137,7 +161,7 @@ tests.push(() =>
 
             t.end();
             return resolve(true);
-        }); 
+        });
     });
 });
 
@@ -198,7 +222,7 @@ tests.push(() =>
                 t.equal(config.server.description, schema.description, `description property is equal to "${config.server.description}"`);
                 t.equal(config.server.$id, schema.$id, `$id property is equal to "${config.server.$id}"`);
                 t.deepLooseEqual(config.server.definitions, schema.definitions, 'defintions property is equal to server config definitions.');
-            }    
+            }
 
             catch(error)
             {
@@ -207,7 +231,7 @@ tests.push(() =>
 
             t.end();
             return resolve(true);
-        }); 
+        });
     });
 });
 
@@ -225,7 +249,7 @@ tests.push(() =>
                 t.equal(config.server.description, schema.description, `description property is equal to "${config.server.description}"`);
                 t.equal(config.server.$id, schema.$id, `$id property is equal to "${config.server.$id}"`);
                 t.deepLooseEqual(config.server.definitions, schema.definitions, 'defintions property is equal to server config definitions.');
-            }    
+            }
 
             catch(error)
             {
@@ -234,7 +258,7 @@ tests.push(() =>
 
             t.end();
             return resolve(true);
-        }); 
+        });
     });
 });
 
@@ -307,7 +331,7 @@ tests.push(() =>
                 t.equal(true, Array.isArray(response.result), '"result" property is an array.');
                 t.equal('object', typeof response.result[0], '"result[0]" is an object.');
                 t.notEqual('websocket', response.result[0].headers.upgrade, '"result[0].headers.upgrade" is not set.');
-            }    
+            }
 
             catch(error)
             {
@@ -316,7 +340,7 @@ tests.push(() =>
 
             t.end();
             return resolve(true);
-        }); 
+        });
     });
 });
 
@@ -337,7 +361,7 @@ tests.push(() =>
                 t.equal(true, Array.isArray(response.result), '"result" property is an array.');
                 t.equal('object', typeof response.result[0], '"result[0]" is an object.');
                 t.equal('websocket', response.result[0].headers.upgrade, '"result[0].headers.upgrade" is set.');
-            }    
+            }
 
             catch(error)
             {
@@ -346,13 +370,13 @@ tests.push(() =>
 
             t.end();
             return resolve(true);
-        }); 
+        });
     });
 });
 
 tests.push(() =>
 {
-    test('Client should call method "foo" on server (HTTP) using a callback.', async (t) =>
+    test('Client should call method "foo" on server (HTTP) using a callback.', (t) =>
     {
         client.http.call(
         {
@@ -379,7 +403,7 @@ tests.push(() =>
 
 tests.push(() =>
 {
-    test('Client should call method "foo" on server (WS) using a callback.', async (t) =>
+    test('Client should call method "foo" on server (WS) using a callback.', (t) =>
     {
         client.ws.call(
         {
@@ -408,6 +432,99 @@ tests.push(() =>
 {
     return new Promise((resolve, reject) =>
     {
+        test('Client should call method "foo" on server (HTTP) as a notification.', async (t) =>
+        {
+            try
+            {
+                const response = await client.http.call(
+                {
+                    method: 'foo',
+                    notification: true
+                });
+                t.equal('object', typeof response, 'response is an object.');
+                t.equal('1.0', response.jayson, 'valid jayson response.');
+                t.equal(undefined, response.result, '"result" is undefined');
+                t.equal(undefined, response.error, '"error" is undefined');
+            }
+
+            catch(error)
+            {
+                t.fail('Request failed.');
+            }
+
+            t.end();
+            return resolve(true);
+        });
+    });
+});
+
+tests.push(() =>
+{
+    return new Promise((resolve, reject) =>
+    {
+        test('Client should call method "foo" on server (WS) as a notification.', async (t) =>
+        {
+            try
+            {
+                await client.ws.call(
+                {
+                    method: 'foo',
+                    notification: true
+                });
+                t.pass();
+            }
+
+            catch(error)
+            {
+                t.fail('Request failed.');
+            }
+
+            t.end();
+            return resolve(true);
+        });
+    });
+});
+
+tests.push(() =>
+{
+    test('Client should call method "foo" as a notification on server (HTTP) using a callback.', (t) =>
+    {
+        client.http.call(
+        {
+            method: 'foo',
+            notification: true,
+            callback: (error, result) =>
+            {
+                t.equal(undefined, error, '"error" is undefined.');
+                t.equal(undefined, result, '"result" is undefined.');
+                t.end();
+            }
+        });
+    });
+});
+
+tests.push(() =>
+{
+    test('Client should call method "foo" as a notification on server (WS) using a callback.', (t) =>
+    {
+        client.ws.call(
+        {
+            method: 'foo',
+            notification: true,
+            callback: (error, result) =>
+            {
+                t.equal(undefined, error, '"error" is undefined.');
+                t.equal(undefined, result, '"result" is undefined.');
+                t.end();
+            }
+        });
+    });
+});
+
+tests.push(() =>
+{
+    return new Promise((resolve, reject) =>
+    {
         test('Client should call method "bar" on server (HTTP).', async (t) =>
         {
             try
@@ -420,7 +537,7 @@ tests.push(() =>
                 t.equal('1.0', response.jayson, 'valid jayson response.');
                 t.equal('object', typeof response.error, '"error" property is an object.');
                 t.equal(Errors.OVERSIZED_RESPONSE, response.error.code, 'Error code is equal to "OVERSIZED_RESPONSE".');
-            }    
+            }
 
             catch(error)
             {
@@ -429,7 +546,7 @@ tests.push(() =>
 
             t.end();
             return resolve(true);
-        }); 
+        });
     });
 });
 
@@ -449,7 +566,7 @@ tests.push(() =>
                 t.equal('1.0', response.jayson, 'valid jayson response.');
                 t.equal('object', typeof response.error, '"error" property is an object.');
                 t.equal(Errors.OVERSIZED_RESPONSE, response.error.code, 'Error code is equal to "OVERSIZED_RESPONSE".');
-            }    
+            }
 
             catch(error)
             {
@@ -458,7 +575,7 @@ tests.push(() =>
 
             t.end();
             return resolve(true);
-        }); 
+        });
     });
 });
 
@@ -480,7 +597,7 @@ tests.push(() =>
                 t.equal('object', typeof response.result, '"result" property is an object.');
                 t.equal('object', typeof response.result.auth, '"result.auth" property is an object.');
                 t.equal(true, response.result.auth.authorized, '"result.auth.authorized" is true.');
-            }    
+            }
 
             catch(error)
             {
@@ -489,7 +606,7 @@ tests.push(() =>
 
             t.end();
             return resolve(true);
-        }); 
+        });
     });
 });
 
@@ -511,7 +628,7 @@ tests.push(() =>
                 t.equal('object', typeof response.result, '"result" property is an object.');
                 t.equal('object', typeof response.result.auth, '"result.auth" property is an object.');
                 t.equal(true, response.result.auth.authorized, '"result.auth.authorized" is true.');
-            }    
+            }
 
             catch(error)
             {
@@ -520,7 +637,7 @@ tests.push(() =>
 
             t.end();
             return resolve(true);
-        }); 
+        });
     });
 });
 
@@ -541,7 +658,7 @@ tests.push(() =>
                 t.equal('1.0', response.jayson, 'valid jayson response.');
                 t.equal('object', typeof response.error, '"error" property is an object.');
                 t.equal(Errors.UNAUTHORIZED, response.error.code, 'Error code is equal to "UNAUTHORIZED".');
-            }    
+            }
 
             catch(error)
             {
@@ -550,7 +667,7 @@ tests.push(() =>
 
             t.end();
             return resolve(true);
-        }); 
+        });
     });
 });
 
@@ -571,7 +688,7 @@ tests.push(() =>
                 t.equal('1.0', response.jayson, 'valid jayson response.');
                 t.equal('object', typeof response.error, '"error" property is an object.');
                 t.equal(Errors.UNAUTHORIZED, response.error.code, 'Error code is equal to "UNAUTHORIZED".');
-            }    
+            }
 
             catch(error)
             {
@@ -580,7 +697,7 @@ tests.push(() =>
 
             t.end();
             return resolve(true);
-        }); 
+        });
     });
 });
 
@@ -600,7 +717,7 @@ tests.push(() =>
                 t.equal('1.0', response.jayson, 'valid jayson response.');
                 t.equal('object', typeof response.error, '"error" property is an object.');
                 t.equal(Errors.TIMEOUT, response.error.code, 'Error code is equal to "TIMEOUT".');
-            }    
+            }
 
             catch(error)
             {
@@ -609,7 +726,7 @@ tests.push(() =>
 
             t.end();
             return resolve(true);
-        }); 
+        });
     });
 });
 
@@ -629,7 +746,7 @@ tests.push(() =>
                 t.equal('1.0', response.jayson, 'valid jayson response.');
                 t.equal('object', typeof response.error, '"error" property is an object.');
                 t.equal(Errors.TIMEOUT, response.error.code, 'Error code is equal to "TIMEOUT".');
-            }    
+            }
 
             catch(error)
             {
@@ -638,7 +755,349 @@ tests.push(() =>
 
             t.end();
             return resolve(true);
-        }); 
+        });
+    });
+});
+
+tests.push(() =>
+{
+    return new Promise((resolve, reject) =>
+    {
+        test('Client should call method "quux" on server (HTTP) with invalid params.', async (t) =>
+        {
+            try
+            {
+                const response = await client.http.call(
+                {
+                    method: 'quux'
+                });
+                t.equal('object', typeof response, 'response is an object.');
+                t.equal('1.0', response.jayson, 'valid jayson response.');
+                t.equal('object', typeof response.error, '"error" property is an object.');
+                t.equal(Errors.INVALID_PARAMS, response.error.code, 'Error code is equal to "INVALID_PARAMS".');
+            }
+
+            catch(error)
+            {
+                t.fail('Request failed.');
+            }
+
+            t.end();
+            return resolve(true);
+        });
+    });
+});
+
+tests.push(() =>
+{
+    return new Promise((resolve, reject) =>
+    {
+        test('Client should call method "quux" on server (WS) with invalid params.', async (t) =>
+        {
+            try
+            {
+                const response = await client.ws.call(
+                {
+                    method: 'quux'
+                });
+                t.equal('object', typeof response, 'response is an object.');
+                t.equal('1.0', response.jayson, 'valid jayson response.');
+                t.equal('object', typeof response.error, '"error" property is an object.');
+                t.equal(Errors.INVALID_PARAMS, response.error.code, 'Error code is equal to "INVALID_PARAMS".');
+            }
+
+            catch(error)
+            {
+                t.fail('Request failed.');
+            }
+
+            t.end();
+            return resolve(true);
+        });
+    });
+});
+
+tests.push(() =>
+{
+    return new Promise((resolve, reject) =>
+    {
+        test('Client should call method "quux" on server (HTTP) with valid params.', async (t) =>
+        {
+            try
+            {
+                const response = await client.http.call(
+                {
+                    method: 'quux',
+                    params: [4, 5]
+                });
+                t.equal('object', typeof response, 'response is an object.');
+                t.equal('1.0', response.jayson, 'valid jayson response.');
+                t.equal(1024, response.result, '"result" = 1024.');
+            }
+
+            catch(error)
+            {
+                t.fail('Request failed.');
+            }
+
+            t.end();
+            return resolve(true);
+        });
+    });
+});
+
+tests.push(() =>
+{
+    return new Promise((resolve, reject) =>
+    {
+        test('Client should call method "quux" on server (WS) with valid params.', async (t) =>
+        {
+            try
+            {
+                const response = await client.ws.call(
+                {
+                    method: 'quux',
+                    params: [4, 5]
+                });
+                t.equal('object', typeof response, 'response is an object.');
+                t.equal('1.0', response.jayson, 'valid jayson response.');
+                t.equal(1024, response.result, '"result" = 1024.');
+            }
+
+            catch(error)
+            {
+                t.fail('Request failed.');
+            }
+
+            t.end();
+            return resolve(true);
+        });
+    });
+});
+
+tests.push(() =>
+{
+    return new Promise((resolve, reject) =>
+    {
+        test('Client should call method "corge" on server (HTTP).', async (t) =>
+        {
+            try
+            {
+                const response = await client.http.call(
+                {
+                    method: 'corge'
+                });
+                t.equal('object', typeof response, 'response is an object.');
+                t.equal('1.0', response.jayson, 'valid jayson response.');
+                t.equal(undefined, response.result, '"result" is undefined');
+                t.equal(undefined, response.error, '"error" is undefined');
+            }
+
+            catch(error)
+            {
+                t.fail('Request failed.');
+            }
+
+            t.end();
+            return resolve(true);
+        });
+    });
+});
+
+tests.push(() =>
+{
+    return new Promise((resolve, reject) =>
+    {
+        test('Client should call method "corge" on server (WS).', async (t) =>
+        {
+            try
+            {
+                const response = await client.ws.call(
+                {
+                    method: 'corge'
+                });
+                t.equal('object', typeof response, 'response is an object.');
+                t.equal('1.0', response.jayson, 'valid jayson response.');
+                t.equal(undefined, response.result, '"result" is undefined');
+                t.equal(undefined, response.error, '"error" is undefined');
+            }
+
+            catch(error)
+            {
+                t.fail('Request failed.');
+            }
+
+            t.end();
+            return resolve(true);
+        });
+    });
+});
+
+tests.push(() =>
+{
+    return new Promise((resolve, reject) =>
+    {
+        test('Client should call an invalid method on server (HTTP).', async (t) =>
+        {
+            try
+            {
+                const response = await client.http.call(
+                {
+                    method: 'fake'
+                });
+                t.equal('object', typeof response, 'response is an object.');
+                t.equal('1.0', response.jayson, 'valid jayson response.');
+                t.equal('object', typeof response.error, '"error" property is an object.');
+                t.equal(Errors.METHOD_NOT_FOUND, response.error.code, 'Error code is equal to "METHOD_NOT_FOUND".');
+            }
+
+            catch(error)
+            {
+                t.fail('Request failed.');
+            }
+
+            t.end();
+            return resolve(true);
+        });
+    });
+});
+
+tests.push(() =>
+{
+    return new Promise((resolve, reject) =>
+    {
+        test('Client should call an invalid method on server (WS).', async (t) =>
+        {
+            try
+            {
+                const response = await client.ws.call(
+                {
+                    method: 'fake'
+                });
+                t.equal('object', typeof response, 'response is an object.');
+                t.equal('1.0', response.jayson, 'valid jayson response.');
+                t.equal('object', typeof response.error, '"error" property is an object.');
+                t.equal(Errors.METHOD_NOT_FOUND, response.error.code, 'Error code is equal to "METHOD_NOT_FOUND".');
+            }
+
+            catch(error)
+            {
+                t.fail('Request failed.');
+            }
+
+            t.end();
+            return resolve(true);
+        });
+    });
+});
+
+tests.push(() =>
+{
+    return new Promise((resolve, reject) =>
+    {
+        test('Client should call method "wibble" on server (HTTP).', async (t) =>
+        {
+            try
+            {
+                const response = await client.http.call(
+                {
+                    method: 'wibble'
+                });
+                t.equal('object', typeof response, 'response is an object.');
+                t.equal('1.0', response.jayson, 'valid jayson response.');
+                t.equal('object', typeof response.error, '"error" property is an object.');
+                t.equal(Errors.INTERNAL_ERROR, response.error.code, 'Error code is equal to "INTERNAL_ERROR".');
+            }
+
+            catch(error)
+            {
+                t.fail('Request failed.');
+            }
+
+            t.end();
+            return resolve(true);
+        });
+    });
+});
+
+tests.push(() =>
+{
+    return new Promise((resolve, reject) =>
+    {
+        test('Client should call method "wibble" on server (WS).', async (t) =>
+        {
+            try
+            {
+                const response = await client.ws.call(
+                {
+                    method: 'wibble'
+                });
+                t.equal('object', typeof response, 'response is an object.');
+                t.equal('1.0', response.jayson, 'valid jayson response.');
+                t.equal('object', typeof response.error, '"error" property is an object.');
+                t.equal(Errors.INTERNAL_ERROR, response.error.code, 'Error code is equal to "INTERNAL_ERROR".');
+            }
+
+            catch(error)
+            {
+                t.fail('Request failed.');
+            }
+
+            t.end();
+            return resolve(true);
+        });
+    });
+});
+
+tests.push(() =>
+{
+    return new Promise((resolve, reject) =>
+    {
+        test('Client should make an invalid request on the server (HTTP).', async (t) =>
+        {
+            try
+            {
+                const response = await client.http.call({});
+                t.equal('object', typeof response, 'response is an object.');
+                t.equal('1.0', response.jayson, 'valid jayson response.');
+                t.equal('object', typeof response.error, '"error" property is an object.');
+                t.equal(Errors.INVALID_REQUEST, response.error.code, 'Error code is equal to "INVALID_REQUEST".');
+            }
+
+            catch(error)
+            {
+                t.fail('Request failed.');
+            }
+
+            t.end();
+            return resolve(true);
+        });
+    });
+});
+
+tests.push(() =>
+{
+    return new Promise((resolve, reject) =>
+    {
+        test('Client should make an invalid request on the server (WS).', async (t) =>
+        {
+            try
+            {
+                const response = await client.ws.call({});
+                t.equal('object', typeof response, 'response is an object.');
+                t.equal('1.0', response.jayson, 'valid jayson response.');
+                t.equal('object', typeof response.error, '"error" property is an object.');
+                t.equal(Errors.INVALID_REQUEST, response.error.code, 'Error code is equal to "INVALID_REQUEST".');
+            }
+
+            catch(error)
+            {
+                t.fail('Request failed.');
+            }
+
+            t.end();
+            return resolve(true);
+        });
     });
 });
 
