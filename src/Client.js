@@ -308,7 +308,7 @@ class Client
                         if(call.notification)
                         {
                             call.callback();
-                            return resolve({jayson: this.VERSION});   
+                            return resolve({jayson: this.VERSION});
                         }
 
                         call.callback(json.error, json.result);
@@ -365,7 +365,7 @@ class Client
                     if(call.notification)
                     {
                         call.callback();
-                        return resolve();
+                        return resolve({jayson: this.VERSION});
                     }
                 }
             });
