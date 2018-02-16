@@ -203,7 +203,6 @@ tests.push(() =>
             }
 
             t.end();
-            return resolve(true)
         });
     });
 });
@@ -283,7 +282,6 @@ tests.push(() =>
             }
 
             t.end();
-            return resolve(true)
         });
     });
 });
@@ -309,7 +307,6 @@ tests.push(() =>
             }
 
             t.end();
-            return resolve(true)
         });
     });
 });

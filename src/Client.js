@@ -317,7 +317,10 @@ class Client
 
                     catch(error)
                     {
-                        return reject(new Error(`Could not connect to HTTP server (${this.config.url}) or invalid JSON response.`));
+                        error.description = error.message;
+                        error.message = `Could not connect to HTTP server (${this.config.url}) or invalid JSON response.`;
+                        call.callback(error);
+                        return reject(error);
                     }
                 }
 
