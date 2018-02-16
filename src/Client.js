@@ -278,7 +278,7 @@ class Client
                 
                 for(const key in call)
                 {
-                    if(['notification', 'callback'].indexOf(key) === -1)
+                    if(['notification', 'callback', 'timeout'].indexOf(key) === -1)
                     {
                         body[key] = call[key];
                     }
