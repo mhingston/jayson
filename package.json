@@ -6,8 +6,8 @@
   "browser": "dist/jayson.min.js",
   "scripts": {
     "docson": "node bin/docson.js",
-    "test": "tape ./test/*.js",
-    "coverage": "nyc tape test/index.js | tap-spec",
+    "test": "tap test/*.js --coverage",
+    "posttest": "tap --coverage-report=html",
     "webpack": "webpack"
   },
   "bin": {
@@ -41,10 +41,9 @@
     "@babel/preset-env": "^7.0.0-beta.39",
     "@babel/preset-es2015": "^7.0.0-beta.39",
     "babel-loader": "^8.0.0-beta.0",
-    "nyc": "^11.4.1",
     "promise-polyfill": "^7.1.0",
     "regenerator-runtime": "^0.11.1",
-    "tap-spec": "^4.1.1",
+    "tap": "^11.1.0",
     "tape": "^4.8.0",
     "webpack": "^3.10.0"
   },

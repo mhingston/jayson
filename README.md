@@ -30,7 +30,7 @@ Jayson uses a custom version of JSON-RPC for messages. The specification is base
 
     * `auth` {String} A [JWT](https://github.com/auth0/node-jsonwebtoken) providing the authentication context.
 
-The reason for baking auth into JSON-RPC was that I felt it should be part of the protocol and not reliant on the different authentication mechanisms available within the transport layers (i.e. HTTP, WebsSocket).
+The reason for baking auth into JSON-RPC was that I felt it should be part of the protocol and not reliant on the different authentication mechanisms available within the transport layers (i.e. HTTP, WebSocket).
 
 ### Method Properties
 
