@@ -15,6 +15,7 @@ const HttpStatus = require('http-status-codes');
 const bytes = require('bytes');
 const path = require('path');
 const methodSchema = require(path.join(__dirname, '..', 'schemas', '1.0', 'method.json'));
+let ipcMain;
 
 class Server
 {
@@ -131,6 +132,12 @@ class Server
                     ws.ping(() => {});
                 });
             }, config.ws.heartbeat);
+        }
+
+        if(config.electron)
+        {
+            ipcMain = require('electron').ipcMain;
+            ipcMain.on('message', (event, message) => this.handleMessage({event, message, headers: {'x-forwarded-for': '127.0.0.1'}}));
         }
     }
 
@@ -599,7 +606,7 @@ class Server
         this.logger.log('debug', `${headers['x-forwarded-for']} - - [${format(new Date(), 'DD/MMM/YYYY HH:mm:ss ZZ')}] Connection closed (${code})`);
     }
 
-    async handleMessage({message, ws, headers})
+    async handleMessage({message, ws, event, headers})
     {
         const oversizedMessage = (id) =>
         {
@@ -655,16 +662,32 @@ class Server
             const body = JSON.stringify(response);
             const isOversized = this.config.jsonLimit && body.length > bytes.parse(this.config.jsonLimit);
 
-            if(ws && response.id !== undefined)
+            if((ws || event) && response.id !== undefined)
             {
                 if(isOversized)
                 {
-                    ws.send(JSON.stringify(oversizedMessage(response.id)));
+                    if(event)
+                    {
+                        event.sender.send('message', oversizedMessage(response.id))
+                    }
+
+                    else
+                    {
+                        ws.send(JSON.stringify(oversizedMessage(response.id)));
+                    }
                 }
 
                 else
                 {
-                    ws.send(body);
+                    if(event)
+                    {
+                        event.sender.send('message', response);
+                    }
+
+                    else
+                    {
+                        ws.send(body);
+                    }
                 }
             }
 
@@ -687,11 +710,24 @@ class Server
             const body = JSON.stringify(batch);
             const isOversized = this.config.jsonLimit && body.length > bytes.parse(this.config.jsonLimit);
             
-            if(ws && batch.length)
+            if(isOversized)
             {
-                if(isOversized)
+                if(event)
+                {
+                    event.sender.send('message', oversizedMessage())
+                }
+
+                else
                 {
                     ws.send(JSON.stringify(oversizedMessage()));
+                }
+            }
+
+            else
+            {
+                if(event)
+                {
+                    event.sender.send('message', batch);
                 }
 
                 else

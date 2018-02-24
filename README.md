@@ -65,7 +65,7 @@ Remote methods may have attached to them the following properties:
 
 ## Server Usage
 
-**Note: The server is intended to be run behind a reverse proxy.**
+**Note: The server is intended to be run behind a reverse proxy, unless you're using [electron](https://github.com/electron/electron) ofcourse.**
 
 ```javascript
 // Import the module
@@ -136,26 +136,27 @@ const config =
 }
 ```
 * `title` {String} Name of the API instance. Default = `'Jayson Server API'`.
-* `description` {String} Description of the API instance.
-* `$id` {String} [JSON Schema ID](https://spacetelescope.github.io/understanding-json-schema/structuring.html#the-id-property).
-* `methods` {Object} **(Required)** Object containing the methods exposed to the RPC server.
-* `definitions` {Object} Schema definitions. Use this when you need to reference shared definitions from method schemas. See the [schema-definitions](https://github.com/mhingston/jayson/blob/master/examples/schema-definitions) example.
-* `logger` {Boolean|Function} Set to true to have debug log written to the console or pass in a function to receive the log messages. Default = `false`.
+* `description` {String} Description of the API instance. Default = `undefined`.
+* `$id` {String} [JSON Schema ID]. Default = `undefined`.(https://spacetelescope.github.io/understanding-json-schema/structuring.html#the-id-property).
+* `methods` {Object} **(Required)** Object containing the methods exposed to the RPC server. Default = `undefined`.
+* `definitions` {Object} Schema definitions. Use this when you need to reference shared definitions from method schemas. See the [schema-definitions](https://github.com/mhingston/jayson/blob/master/examples/schema-definitions) example. Default = `undefined`.
+* `logger` {Boolean|Function} Set to true to have debug log written to the console or pass in a function to receive the log messages. Default = `undefined`.
 * `jsonLimit` {String} Maximum size of the message payload. Default = `'1mb'`.
 * `timeout` {Number|Null} Default timeout for all RPC calls (in milliseconds). Set to `null` to disable default timeout. Default = `60000`.
-* `http` {Object}.
+* `http` {Object}. Default = `undefined`.
   * `port` {Number} Port to listen to HTTP connections on. Default = `3000`.
   * `cors` {Object} CORS options, see [koa2-cors](https://github.com/zadzbw/koa2-cors#options). Default = `{}`.
   * `helmet` {Object} Helmet options, see [koa-helmet](https://github.com/venables/koa-helmet). Default = `{noCache: true}`.
   * `compress` {Object} Compress options, see [compress](https://github.com/koajs/compress#options). Default = `{}`. 
-* `ws` {Object}.
+* `ws` {Object}. Default = `undefined`.
   * `port` {Number} Port to listen to WebSocket connections on. Default = `3001`.
   * `heartbeat` {Number} How often to send pings to clients (in milliseconds). Default = `30000`.
-* `jwt` {Object}.
+* `electron` {Boolean} Whether the server is running in electron. Default = `undefined`.
+* `jwt` {Object}. Default = `{}`.
   * `secret` {String|Buffer|Object} See [jwt.sign](https://github.com/auth0/node-jsonwebtoken#jwtsignpayload-secretorprivatekey-options-callback). Default = `'sauce'`.
   * `options` {Object} See [jwt.sign](https://github.com/auth0/node-jsonwebtoken#jwtsignpayload-secretorprivatekey-options-callback).
 
-**Note: The config must include a `http` and/or a `ws` property.**
+**Note: The config must include a `http` and/or a `ws` property unless you're using electron in which case just set `electron: true`.**
 
 Instantiate a new RPC server:
 ```javascript
@@ -186,8 +187,9 @@ const config =
 ```
 * `retryDelay` {Number} If the connection to the WebSocket server is lost how often should the client attempt to reconnect (in milliseconds). Default = `3000`.
 * `timeout` {Number} How long to wait for a response for every RPC call (in milliseconds). Default = `60000`.
-* `logger` {Boolean|Function} Set to true to have debug log written to the console or pass in a function to receive the log messages. Default = `false`.
-* `url` {String} The URL of the Jayson server. To connect to a WebSocket server use a WebSocket protocol i.e. `ws://` or `wss://`. Default = `'http://127.0.0.1:3000'`.
+* `logger` {Boolean|Function} Set to true to have debug log written to the console or pass in a function to receive the log messages. Default = `undefined`.
+* `url` {String} The URL of the Jayson server. To connect to a WebSocket server use a WebSocket protocol i.e. `ws://` or `wss://`. Default = `undefined`. If you're using electron this isn't required.
+* `electron` {Boolean} Whether the client is running in electron. Default = `undefined`.
 
 Instantiate a new RPC client:
 

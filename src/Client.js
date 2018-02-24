@@ -15,13 +15,14 @@ if(typeof WebSocket !== 'function')
     WebSocket = require('ws');
 }
 
+let ipcRenderer;
+
 class Client
 {
     constructor(config)
     {
         config.retryDelay = config.retryDelay || 3000;
         config.timeout = config.timeout !== undefined ? config.timeout : 60000;
-        config.url = config.url || 'http://127.0.0.1:3000';
         this.config = config;
         
         if(config.logger && typeof config.logger.log === 'function')
@@ -71,7 +72,7 @@ class Client
 
         return new Promise((resolve, reject) =>
         {
-            const messageFn = (event) => this.handleMessage(event);
+            const messageFn = (event) => this.handleMessage({event});
             
             const openFn = (event) =>
             {
@@ -112,8 +113,17 @@ class Client
                 }
             };
 
-            if(!/^wss?:\/\//.test(this.config.url) || (this.ws && this.ws.readyState === this.readyState.OPEN))
+            if(this.config.electron || !/^wss?:\/\//.test(this.config.url) || (this.ws && this.ws.readyState === this.readyState.OPEN))
             {
+                if(this.config.electron)
+                {
+                    if(process.env.NODE_ENV !== 'browser')
+                    {
+                        ipcRenderer = require('electron').ipcRenderer;
+                        ipcRenderer.on('message', (event, message) => this.handleMessage({event, message}));
+                    }
+                }
+
                 resolved = true;
                 callback(null, this);
                 return resolve(this);
@@ -214,21 +224,25 @@ class Client
         this.logger.log('error', `Connection error.`);
     }
 
-    handleMessage(event)
+    handleMessage({event, message})
     {
-        const message = typeof MessageEvent != 'undefined' ? event.data : event;
+        message = message ? message : (typeof MessageEvent != 'undefined' ? event.data : event);
         let json;
 
-        try
+        if(typeof message === 'string')
         {
-            json = JSON.parse(message);
+            try
+            {
+                json = JSON.parse(message);
+            }
+
+            catch(error)
+            {
+                this.logger.log('error', `Parse error`);
+            }
         }
 
-        catch(error)
-        {
-            this.logger.log('error', `Parse error`);
-        }
-
+        json = json || message;
         json = Array.isArray(json) ? json : [json];
         json.forEach((response) =>
         {
@@ -360,7 +374,15 @@ class Client
                         })
                     }
 
-                    this.ws.send(JSON.stringify(body));
+                    if(ipcRenderer)
+                    {
+                        ipcRenderer.send('message', body);
+                    }
+
+                    else
+                    {
+                        this.ws.send(JSON.stringify(body));
+                    }
 
                     if(call.notification)
                     {
