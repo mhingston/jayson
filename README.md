@@ -188,7 +188,7 @@ const config =
 * `retryDelay` {Number} If the connection to the WebSocket server is lost how often should the client attempt to reconnect (in milliseconds). Default = `3000`.
 * `timeout` {Number} How long to wait for a response for every RPC call (in milliseconds). Default = `60000`.
 * `logger` {Boolean|Function} Set to true to have debug log written to the console or pass in a function to receive the log messages. Default = `undefined`.
-* `url` {String} The URL of the Jayson server. To connect to a WebSocket server use a WebSocket protocol i.e. `ws://` or `wss://`. Default = `undefined`. If you're using electron this isn't required.
+* `url` {String} The URL of the Jayson server. To connect to a WebSocket server use a WebSocket protocol i.e. `ws://` or `wss://`. If you're using electron this isn't required. Default = `undefined`.
 * `electron` {Boolean} Whether the client is running in electron. Default = `undefined`.
 
 Instantiate a new RPC client:
