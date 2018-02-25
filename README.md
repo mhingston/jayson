@@ -137,7 +137,7 @@ const config =
 ```
 * `title` {String} Name of the API instance. Default = `'Jayson Server API'`.
 * `description` {String} Description of the API instance. Default = `undefined`.
-* `$id` {String} [JSON Schema ID]. Default = `undefined`.(https://spacetelescope.github.io/understanding-json-schema/structuring.html#the-id-property).
+* `$id` {String} [JSON Schema ID](https://spacetelescope.github.io/understanding-json-schema/structuring.html#the-id-property). Default = `undefined`.
 * `methods` {Object} **(Required)** Object containing the methods exposed to the RPC server. Default = `undefined`.
 * `definitions` {Object} Schema definitions. Use this when you need to reference shared definitions from method schemas. See the [schema-definitions](https://github.com/mhingston/jayson/blob/master/examples/schema-definitions) example. Default = `undefined`.
 * `logger` {Boolean|Function} Set to true to have debug log written to the console or pass in a function to receive the log messages. Default = `undefined`.
