@@ -615,7 +615,7 @@ class Server
                 error:
                 {
                     code: this.errors.OVERSIZED_RESPONSE,
-                    message: `Response body exceeds jsonLimit (${this.jsonLimit}).`
+                    message: `Response body exceeds jsonLimit (${this.config.jsonLimit}).`
                 },
                 id
             }

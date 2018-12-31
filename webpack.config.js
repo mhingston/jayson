@@ -1,7 +1,9 @@
 const webpack = require('webpack');
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
 module.exports =
 {
+    mode: 'production',
     entry: './src/index.js',
     output:
     {
@@ -26,7 +28,6 @@ module.exports =
     },
     plugins:
     [
-        new webpack.optimize.UglifyJsPlugin(),
         new webpack.IgnorePlugin(/Server/),
         new webpack.DefinePlugin(
         {
@@ -36,6 +37,10 @@ module.exports =
             }
         })
     ],
+    optimization:
+    {
+        minimizer: [new UglifyJsPlugin()]
+    },
     node:
     {
         fs: 'empty'

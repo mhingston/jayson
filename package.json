@@ -1,6 +1,6 @@
 {
   "name": "jayson",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "JSON-RPC inspired server and client with HTTP and WebSocket transports and JSON Schema IDL",
   "main": "src/index.js",
   "browser": "dist/jayson.min.js",
@@ -14,44 +14,46 @@
     "docson": "./bin/docson.js"
   },
   "keywords": [],
-  "author": "Mark Hingston <git@mail.bitshift.cc>",
+  "author": "Mark Hingston",
   "license": "MIT",
   "dependencies": {
-    "ajv": "^6.1.1",
+    "ajv": "^6.6.2",
     "bytes": "^3.0.0",
-    "commander": "^2.14.1",
-    "date-fns": "^1.29.0",
-    "fetch-ponyfill": "^5.0.0",
+    "commander": "^2.19.0",
+    "date-fns": "^1.30.1",
+    "electron": "^4.0.0",
+    "fetch-ponyfill": "^6.0.2",
     "fn-args": "^3.0.0",
     "http-status-codes": "^1.3.0",
     "jquery": "^3.3.1",
-    "jsonwebtoken": "^8.1.1",
-    "koa": "^2.4.1",
-    "koa-bodyparser": "^4.2.0",
-    "koa-compress": "^2.0.0",
-    "koa-helmet": "^3.3.0",
+    "jsonwebtoken": "^8.4.0",
+    "koa": "^2.6.2",
+    "koa-bodyparser": "^4.2.1",
+    "koa-compress": "^3.0.0",
+    "koa-helmet": "^4.0.0",
     "koa-router": "^7.4.0",
-    "koa2-cors": "^2.0.5",
-    "lodash": "^4.17.5",
+    "koa2-cors": "^2.0.6",
+    "lodash": "^4.17.11",
     "node-docson": "^0.4.6",
-    "ws": "^4.0.0"
+    "ws": "^6.1.2"
   },
   "devDependencies": {
-    "@babel/core": "^7.0.0-beta.39",
-    "@babel/preset-env": "^7.0.0-beta.39",
-    "@babel/preset-es2015": "^7.0.0-beta.39",
-    "babel-loader": "^8.0.0-beta.0",
-    "promise-polyfill": "^7.1.0",
-    "regenerator-runtime": "^0.11.1",
-    "tap": "^11.1.0",
-    "tape": "^4.8.0",
-    "webpack": "^3.10.0"
+    "@babel/core": "^7.2.2",
+    "@babel/preset-env": "^7.2.3",
+    "babel-loader": "^8.0.4",
+    "promise-polyfill": "^8.1.0",
+    "regenerator-runtime": "^0.13.1",
+    "tap": "^12.1.1",
+    "tape": "^4.9.2",
+    "uglifyjs-webpack-plugin": "^2.1.1",
+    "webpack": "^4.28.3",
+    "webpack-cli": "^3.1.2"
   },
   "optionalDependencies": {
-    "bufferutil": "^3.0.3",
-    "utf-8-validate": "^4.0.0"
+    "bufferutil": "^4.0.1",
+    "utf-8-validate": "^5.0.2"
   },
   "peerDependencies": {
-    "electron": "^1.8.2"
+    "electron": "^4.0.0"
   }
 }

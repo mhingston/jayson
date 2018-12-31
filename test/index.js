@@ -1003,7 +1003,7 @@ tests.push(() =>
                 t.equal('object', typeof response, 'response is an object.');
                 t.equal('1.0', response.jayson, 'valid jayson response.');
                 t.equal('object', typeof response.error, '"error" property is an object.');
-                t.equal(Errors.INTERNAL_ERROR, response.error.code, 'Error code is equal to "INTERNAL_ERROR".');
+                t.equal(Errors.OVERSIZED_RESPONSE, response.error.code, 'Error code is equal to "OVERSIZED_RESPONSE".'); // Stack trace > 1kb so OVERSIZED_RESPONSE takes priority over INTERNAL_ERROR
             }
 
             catch(error)
